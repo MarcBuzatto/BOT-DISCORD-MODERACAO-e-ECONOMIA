@@ -1,0 +1,92 @@
+================================================================================
+🎨 BOT DISCORD - MODERAÇÃO + ECONOMIA
+Desenvolvido por: MARKIZIN
+================================================================================
+
+📋 REQUISITOS:
+- Python 3.8 ou superior
+- Conta Discord Developer (para criar o bot)
+
+================================================================================
+⚙️ INSTALAÇÃO:
+
+1. INSTALAR PYTHON:
+   - Baixe em: https://www.python.org/downloads/
+   - Durante instalação, marque "Add Python to PATH"
+
+2. INSTALAR DEPENDÊNCIAS:
+   - Abra o terminal nesta pasta
+   - Execute: pip install -r requirements.txt
+
+3. CONFIGURAR TOKEN:
+   - Abra o arquivo ".env"
+   - Substitua "SEU_TOKEN_AQUI" pelo token do seu bot
+   - Para obter o token:
+     a) Acesse: https://discord.com/developers/applications
+     b) Clique no seu bot > Bot > Reset Token
+     c) Copie o token gerado
+
+4. CONFIGURAR PERMISSÕES DO BOT:
+   - No Discord Developer Portal:
+   - Bot > Privileged Gateway Intents:
+     ✅ MESSAGE CONTENT INTENT
+     ✅ SERVER MEMBERS INTENT
+   - OAuth2 > URL Generator:
+     Scopes: bot, applications.commands
+     Permissions: Administrator (ou personalize)
+
+================================================================================
+🚀 INICIAR O BOT:
+
+WINDOWS:
+  python bot.py
+
+LINUX/MAC:
+  python3 bot.py
+
+================================================================================
+📚 COMANDOS PRINCIPAIS:
+
+/painel - Abre painel de configuração principal
+/backup - Cria backup das configurações
+/restore - Restaura backup anterior
+/tema - Gerencia temas visuais
+/permissoes - Configura permissões por cargo
+/stats - Estatísticas avançadas
+/antiraid - Sistema anti-raid
+/formulario - Criar formulários customizados
+
+================================================================================
+🛡️ MÓDULOS INCLUÍDOS:
+
+✅ Sistema de Tickets
+✅ Boas-vindas e Despedidas
+✅ Economia (Daily, Saldo, Transferências)
+✅ Moderação (Ban, Kick, Mute, Warn, Timeout)
+✅ Logs Avançados
+✅ Autorole (Reaction Roles)
+✅ Embeds Personalizados
+✅ Emojis Globais
+✅ Sistema de Backup Automático
+✅ Temas Predefinidos (5 temas)
+✅ Permissões por Cargo
+✅ Importar/Exportar Configs
+✅ Estatísticas Detalhadas
+✅ Anti-Raid Automático
+✅ Formulários Customizados
+
+================================================================================
+⚠️ AVISOS IMPORTANTES:
+
+- Nunca compartilhe o arquivo .env (contém o token)
+- Faça backups regulares com /backup
+- Configure permissões antes de dar acesso a moderadores
+- Teste em servidor de testes primeiro
+
+================================================================================
+📞 SUPORTE:
+
+Desenvolvedor: MARKIZIN
+Perfil: https://ggmax.com.br/perfil/markizin002
+
+================================================================================

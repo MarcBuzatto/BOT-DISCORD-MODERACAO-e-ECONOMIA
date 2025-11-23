@@ -1,0 +1,6 @@
+# Dependências do Bot Discord - Moderação + Economia
+# Desenvolvido por MARKIZIN
+# https://ggmax.com.br/perfil/markizin002
+
+discord.py==2.3.2
+python-dotenv==1.0.0
