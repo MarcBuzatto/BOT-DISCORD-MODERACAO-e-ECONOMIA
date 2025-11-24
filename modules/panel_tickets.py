@@ -108,9 +108,14 @@ class SetCategoryButton(Button):
         super().__init__(label="Categoria", style=discord.ButtonStyle.secondary, emoji="🗂️", row=1)
         self.panel = panel
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message("**🗂️ Como pegar o ID da categoria:**\n\n1️⃣ Ative o Modo Desenvolvedor no Discord (Configurações → Avançado → Modo Desenvolvedor)\n2️⃣ Clique com botão direito na categoria\n3️⃣ Selecione 'Copiar ID'\n4️⃣ Cole o número aqui\n\n**O que é?** Categoria onde os canais de ticket serão criados automaticamente.\n\n**Dica:** Crie uma categoria chamada 'Tickets' antes.", ephemeral=True)
         class CategoryModal(discord.ui.Modal, title="🗂️ Definir Categoria de Tickets"):
-            category_id_input = discord.ui.TextInput(label="ID da Categoria (números)", placeholder="Ex: 1234567890123456789", required=True, max_length=20, style=discord.TextStyle.short)
+            category_id_input = discord.ui.TextInput(
+                label="ID da Categoria", 
+                placeholder="Cole aqui o ID (Botão direito > Copiar ID)", 
+                required=True, 
+                max_length=20, 
+                style=discord.TextStyle.short
+            )
             def __init__(self, parent):
                 super().__init__()
                 self.panel = parent
@@ -133,9 +138,14 @@ class SetSupportRolesButton(Button):
         super().__init__(label="Cargos Suporte", style=discord.ButtonStyle.secondary, emoji="🛠️", row=1)
         self.panel = panel
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message("**🛠️ Cargos de Suporte - Explicação:**\n\n**O que são?** Cargos que poderão ver e responder tickets.\n\n**Como pegar IDs:**\n1️⃣ Ative Modo Desenvolvedor\n2️⃣ Clique direito no cargo (Configurações → Cargos)\n3️⃣ Copiar ID\n4️⃣ Cole no campo separando com vírgula\n\n**Exemplo:** 123456789,987654321,555555555\n\n**Importante:** Membros com esses cargos terão acesso a TODOS os tickets.", ephemeral=True)
         class RolesModal(discord.ui.Modal, title="🛠️ Definir Cargos de Suporte"):
-            roles_input = discord.ui.TextInput(label="IDs separados por vírgula", placeholder="Ex: 1234567890,9876543210", required=True, max_length=200, style=discord.TextStyle.short)
+            roles_input = discord.ui.TextInput(
+                label="IDs dos Cargos (separados por vírgula)", 
+                placeholder="Ex: 1234567890,9876543210,5555555", 
+                required=True, 
+                max_length=200, 
+                style=discord.TextStyle.short
+            )
             def __init__(self, parent):
                 super().__init__()
                 self.panel = parent
@@ -617,8 +627,16 @@ class OpenTicketButton(discord.ui.Button):
         if cfg.get('category_ids'):
             class CategorySelect(discord.ui.Select):
                 def __init__(self, cats):
-                    options = [discord.SelectOption(label=guild.get_channel(cid).name[:100], value=str(cid)) for cid in cats if guild.get_channel(cid)]
-                    super().__init__(placeholder='Selecione categoria do ticket', min_values=1, max_values=1, options=options)
+                    # Remover duplicatas e criar opções únicas
+                    unique_cats = list(set(cats))  # Remove IDs duplicados
+                    options = []
+                    seen_values = set()
+                    for cid in unique_cats:
+                        channel = guild.get_channel(cid)
+                        if channel and str(cid) not in seen_values:
+                            options.append(discord.SelectOption(label=channel.name[:100], value=str(cid)))
+                            seen_values.add(str(cid))
+                    super().__init__(placeholder='Selecione categoria do ticket', min_values=1, max_values=1, options=options[:25])
                 async def callback(self, inter: discord.Interaction):
                     nonlocal target_category
                     cid = int(self.values[0])
