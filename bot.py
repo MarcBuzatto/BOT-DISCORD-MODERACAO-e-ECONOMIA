@@ -733,7 +733,7 @@ async def on_member_join(member: discord.Member):
             except Exception:
                 pass
     # DM
-    if cfg.get('dm_enabled'):
+    if cfg.get('dm_enabled') and not member.bot:
         dm_text = cfg.get('dm_message', '').format(user=member.mention, server=member.guild.name)
         try:
             await member.send(dm_text)
@@ -1091,7 +1091,7 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
     template = mod_cfg.get("kick_message", f"{emoji} {{user}} foi removido do servidor.\n**Motivo:** {{reason}}")
     try:
         await member.kick(reason=reason)
-        if dm_enabled:
+        if dm_enabled and not member.bot:
             try:
                 await member.send(dm_msg.format(server=interaction.guild.name, reason=reason))
             except Exception:
@@ -1198,7 +1198,7 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
     template = mod_cfg.get("ban_message", f"{emoji} {{user}} foi banido do servidor.\n**Motivo:** {{reason}}")
     try:
         await member.ban(reason=reason)
-        if dm_enabled:
+        if dm_enabled and not member.bot:
             try:
                 await member.send(dm_msg.format(server=interaction.guild.name, reason=reason))
             except Exception:
@@ -1288,7 +1288,7 @@ async def warn(interaction: discord.Interaction, member: discord.Member, reason:
     )
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
-    if dm_enabled:
+    if dm_enabled and not member.bot:
         try:
             await member.send(dm_msg.format(server=interaction.guild.name, reason=reason))
         except discord.Forbidden:

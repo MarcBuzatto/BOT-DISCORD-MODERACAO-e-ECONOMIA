@@ -126,7 +126,7 @@ class SetCategoryButton(Button):
                 except ValueError as e:
                     await self.panel.send_error(inter, f"❌ Erro: {e}\n\nVerifique se copiou apenas números e se é uma categoria válida.")
         modal = CategoryModal(self.panel)
-        await interaction.followup.send_modal(modal)
+        await interaction.response.send_modal(modal)
 
 class SetSupportRolesButton(Button):
     def __init__(self, panel: TicketsPanel):
@@ -162,7 +162,7 @@ class SetSupportRolesButton(Button):
                 await self.panel.send_success(inter, msg)
                 await self.panel.refresh(inter)
         modal = RolesModal(self.panel)
-        await interaction.followup.send_modal(modal)
+        await interaction.response.send_modal(modal)
 
 class ToggleClaimButton(Button):
     def __init__(self, panel: TicketsPanel):
