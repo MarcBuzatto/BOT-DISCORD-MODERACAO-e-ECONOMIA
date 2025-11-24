@@ -622,6 +622,28 @@ class OpenTicketButton(discord.ui.Button):
             if role:
                 overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
         overwrites[interaction.user] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        
+        # Verificar formulário inicial PRIMEIRO (antes de qualquer outra interação)
+        initial_subject = None
+        initial_description = None
+        interaction_responded = False
+        
+        if cfg.get('require_initial_form'):
+            class InitialFormModal(discord.ui.Modal, title=cfg.get('initial_form_subject_label', 'Assunto')):
+                subject = discord.ui.TextInput(label=cfg.get('initial_form_subject_label','Assunto'), max_length=100, required=True)
+                desc = discord.ui.TextInput(label=cfg.get('initial_form_description_label','Descrição'), style=discord.TextStyle.paragraph, max_length=1000, required=True)
+                async def on_submit(self, inter: discord.Interaction):
+                    nonlocal initial_subject, initial_description
+                    initial_subject = self.subject.value
+                    initial_description = self.desc.value
+                    await inter.response.send_message('Processando...', ephemeral=True)
+            modal = InitialFormModal()
+            await interaction.response.send_modal(modal)
+            interaction_responded = True
+            await modal.wait()
+            if not initial_subject:
+                return
+        
         # Seleção de categoria se múltiplas
         target_category = None
         if cfg.get('category_ids'):
@@ -647,19 +669,27 @@ class OpenTicketButton(discord.ui.Button):
                     prev = cat_counters.get(str(cid), 0) + 1
                     cat_counters[str(cid)] = prev
                     self.view.stop()
-                    self.view.stop()
                     await inter.response.send_message('Categoria selecionada.', ephemeral=True)
             view = discord.ui.View(timeout=60)
             view.add_item(CategorySelect(cfg.get('category_ids')))
-            await interaction.response.send_message('Escolha a categoria para o ticket.', view=view, ephemeral=True)
+            if interaction_responded:
+                await interaction.followup.send('Escolha a categoria para o ticket.', view=view, ephemeral=True)
+            else:
+                await interaction.response.send_message('Escolha a categoria para o ticket.', view=view, ephemeral=True)
+                interaction_responded = True
             await view.wait()
             if not target_category:
                 return
         else:
             target_category = guild.get_channel(cfg.get('category_id')) if cfg.get('category_id') else None
+        
         if not isinstance(target_category, discord.CategoryChannel):
-            await interaction.followup.send('❌ Nenhuma categoria válida configurada.', ephemeral=True)
+            if interaction_responded:
+                await interaction.followup.send('❌ Nenhuma categoria válida configurada.', ephemeral=True)
+            else:
+                await interaction.response.send_message('❌ Nenhuma categoria válida configurada.', ephemeral=True)
             return
+        
         # Template de nome
         name_template = cfg.get('ticket_name_template', 'ticket-{counter}')
         # Se contador por categoria disponível usar esse valor
@@ -671,23 +701,6 @@ class OpenTicketButton(discord.ui.Button):
         else:
             cat_count_val = counter
         name = name_template.replace('{counter}', str(cat_count_val)).replace('{user}', interaction.user.name[:10]).replace('{category}', target_category.name[:10] if target_category else 'na')
-        # Verificar formulário inicial
-        initial_subject = None
-        initial_description = None
-        if cfg.get('require_initial_form'):
-            class InitialFormModal(discord.ui.Modal, title=cfg.get('initial_form_subject_label', 'Assunto')):
-                subject = discord.ui.TextInput(label=cfg.get('initial_form_subject_label','Assunto'), max_length=100, required=True)
-                desc = discord.ui.TextInput(label=cfg.get('initial_form_description_label','Descrição'), style=discord.TextStyle.paragraph, max_length=1000, required=True)
-                async def on_submit(self, inter: discord.Interaction):
-                    nonlocal initial_subject, initial_description
-                    initial_subject = self.subject.value
-                    initial_description = self.desc.value
-                    await inter.response.send_message('Processando...', ephemeral=True)
-            modal = InitialFormModal()
-            await interaction.response.send_modal(modal)
-            await modal.wait()
-            if not initial_subject:
-                return
         # Prioridade
         priority_selected = None
         if cfg.get('enable_priority'):
