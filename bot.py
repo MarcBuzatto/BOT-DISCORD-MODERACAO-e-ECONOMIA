@@ -9,7 +9,7 @@ from pathlib import Path
 import webbrowser
 import hashlib
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from discord.ext import tasks
 
 # Importar sistema de painéis
@@ -26,6 +26,10 @@ def _style_embed(guild: discord.Guild | None, embed: discord.Embed) -> discord.E
     if guild is None:
         return embed
     return panel_config.apply_style(guild.id, embed)
+
+# Helper para datetime UTC (utcnow() está deprecated no Python 3.12+)
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 load_dotenv()
@@ -108,7 +112,7 @@ def _exibir_creditos_autor():
         print("🌐 Abrindo perfil do desenvolvedor...")
         webbrowser.open(_AUTOR_DATA['p'])
         print("✅ Perfil aberto com sucesso!\n")
-    except:
+    except Exception:
         print("⚠️  Não foi possível abrir o navegador\n")
     
     return True
@@ -314,7 +318,7 @@ class TransferModal(discord.ui.Modal, title="💸 Transferir Créditos"):
             title="💸 Transferência realizada",
             description=f"{interaction.user.mention} transferiu {quantia} créditos para {membro_destino.mention}",
             color=discord.Color.gold(),
-            timestamp=datetime.utcnow()
+            timestamp=_utcnow()
         )
         embed = _style_embed(interaction.guild, embed)
         embed.set_footer(text=f"Saldo atual: {economia.get(sender_id, 0)}")
@@ -380,7 +384,7 @@ async def send_help_ephemeral(interaction: discord.Interaction):
         title="📘 Comandos Disponíveis",
         description="\n".join(desc_lines) or "Nenhum comando disponível.",
         color=discord.Color.blurple(),
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -419,7 +423,7 @@ async def auto_close_tickets_task():
                         last_msg = msg
                         break
                     if last_msg:
-                        delta = (datetime.utcnow() - last_msg.created_at).total_seconds() / 60
+                        delta = (_utcnow() - last_msg.created_at).total_seconds() / 60
                         if delta >= threshold_minutes:
                             await ch.send('⏰ Ticket fechado automaticamente por inatividade.')
                             await asyncio.sleep(5)
@@ -464,13 +468,13 @@ async def sla_check_task():
                             if staff_responded:
                                 break
                     else:
-                        created_delta = (datetime.utcnow() - ch.created_at).total_seconds() / 60
+                        created_delta = (_utcnow() - ch.created_at).total_seconds() / 60
                         # Detectar prioridade no tópico
                         priority = None
                         if 'priority:' in ch.topic:
                             try:
                                 priority = ch.topic.split('priority:')[1].split()[0].upper()
-                            except:
+                            except (IndexError, AttributeError):
                                 priority = None
                         threshold = None
                         if sla_map and priority:
@@ -494,6 +498,9 @@ async def on_ready():
     # Carregar sistemas adicionais
     try:
         from modules import backup_system, themes, permissions, import_export, stats_system, antiraid_system, form_system
+        from modules.panel_tickets import OpenTicketButton
+        from modules.form_system import FormPublicView
+        
         await backup_system.setup(bot, panel_config)
         await themes.setup(bot, panel_config)
         await permissions.setup(bot, panel_config)
@@ -501,10 +508,30 @@ async def on_ready():
         global stats_tracker
         stats_tracker = await stats_system.setup(bot, panel_config)
         await antiraid_system.setup(bot, panel_config)
-        await form_system.setup(bot, panel_config)
+        form_sys = await form_system.setup(bot, panel_config)
+        
+        # Registrar views persistentes (timeout=None) para funcionar após restart
+        # OpenTicketView precisa ser recriado para cada guild
+        for guild in bot.guilds:
+            try:
+                # Registrar view do ticket com custom_id
+                class OpenTicketView(discord.ui.View):
+                    def __init__(self, cm):
+                        super().__init__(timeout=None)
+                        self.add_item(OpenTicketButton(cm))
+                bot.add_view(OpenTicketView(panel_config))
+                
+                # Registrar views de formulários
+                forms = form_sys.get_forms(guild.id)
+                for form_id, form_data in forms.items():
+                    bot.add_view(FormPublicView(form_sys, guild.id, form_data))
+            except Exception as e:
+                print(f"⚠️ Erro ao registrar views persistentes para {guild.name}: {e}")
+        
         print("✅ Todos os 7 sistemas adicionais carregados com sucesso!")
         print("   📦 Backup | 🎨 Temas | 🔐 Permissões | 📤 Import/Export")
         print("   📊 Estatísticas | 🛡️ Anti-Raid | 📋 Formulários")
+        print("✅ Views persistentes registrados para botões de tickets e formulários")
     except Exception as e:
         print(f"⚠️ Aviso ao carregar sistemas extras: {e}")
     
@@ -812,7 +839,7 @@ async def ping(interaction: discord.Interaction):
         title="🏓 Pong!",
         description=f"Latência: {latency}ms",
         color=discord.Color.blue(),
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     view = discord.ui.View()
@@ -826,7 +853,7 @@ async def bemvindo(interaction: discord.Interaction):
         title="🎉 Bem-vindo ao servidor!",
         description="Obrigado por se juntar a nós! Veja nossos canais de regras e diversão.",
         color=discord.Color.green(),
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed)
@@ -864,7 +891,7 @@ async def daily(interaction: discord.Interaction):
         title=f"{emoji} Daily coletado!",
         description=msg_template.format(emoji=emoji, amount=amount, total=economia[user_id]),
         color=color,
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     view = EconomyView(interaction.user.id)
@@ -890,7 +917,7 @@ async def saldo(interaction: discord.Interaction):
         title="💎 Seu saldo",
         description=f"Você tem: **{saldo_valor} créditos**",
         color=color,
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, view=EconomyView(interaction.user.id), ephemeral=True)
@@ -941,7 +968,7 @@ async def transferir(interaction: discord.Interaction, member: discord.Member, a
         title=f"{emoji} Transferência realizada",
         description=msg_template.format(emoji=emoji, sender=interaction.user.mention, amount=amount, receiver=member.mention),
         color=color,
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed)
@@ -957,7 +984,7 @@ async def top(interaction: discord.Interaction):
         member = interaction.guild.get_member(uid)
         name = member.display_name if member else f"ID:{uid}"
         lines.append(f"{i}. **{name}** — {value}")
-    embed = discord.Embed(title="🏆 Top Saldos", description="\n".join(lines), color=discord.Color.gold(), timestamp=datetime.utcnow())
+    embed = discord.Embed(title="🏆 Top Saldos", description="\n".join(lines), color=discord.Color.gold(), timestamp=_utcnow())
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -972,7 +999,7 @@ async def shop(interaction: discord.Interaction):
         await interaction.response.send_message("Nenhum item na loja.", ephemeral=True)
         return
     lines = [f"{it['name']} — {it['price']} {econ_cfg.get('shop_currency_name','créditos')}" for it in items]
-    embed = discord.Embed(title="🛍️ Loja", description="\n".join(lines), color=econ_cfg.get('daily_color',0x00FF00), timestamp=datetime.utcnow())
+    embed = discord.Embed(title="🛍️ Loja", description="\n".join(lines), color=econ_cfg.get('daily_color',0x00FF00), timestamp=_utcnow())
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -1009,7 +1036,7 @@ async def buy(interaction: discord.Interaction, item: str):
         inv_user.append(target['name'])
         inventory[str(user_id)] = inv_user
         await save_inventory(inventory)
-    embed = discord.Embed(description=buy_msg.format(item=target['name'], price=target['price'], currency=currency, emoji=emoji), color=discord.Color.green(), timestamp=datetime.utcnow())
+    embed = discord.Embed(description=buy_msg.format(item=target['name'], price=target['price'], currency=currency, emoji=emoji), color=discord.Color.green(), timestamp=_utcnow())
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -1019,7 +1046,7 @@ async def inventory_cmd(interaction: discord.Interaction):
     if not inv_user:
         await interaction.response.send_message("Inventário vazio.", ephemeral=True)
         return
-    embed = discord.Embed(title="🎒 Inventário", description="\n".join([f"• {it}" for it in inv_user]), color=discord.Color.blurple(), timestamp=datetime.utcnow())
+    embed = discord.Embed(title="🎒 Inventário", description="\n".join([f"• {it}" for it in inv_user]), color=discord.Color.blurple(), timestamp=_utcnow())
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -1089,6 +1116,21 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
     mod_cfg = panel_config.get_guild_config(interaction.guild.id, "moderation")
     color = mod_cfg.get("kick_color", 0xFF6B00)
     template = mod_cfg.get("kick_message", f"{emoji} {{user}} foi removido do servidor.\n**Motivo:** {{reason}}")
+    
+    # Validar hierarquia de cargos
+    if member.top_role >= interaction.guild.me.top_role:
+        await interaction.followup.send(
+            embed=discord.Embed(description="❌ Não posso expulsar esse membro - ele tem cargo igual ou superior ao meu.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+    if member.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:
+        await interaction.followup.send(
+            embed=discord.Embed(description="❌ Você não pode expulsar esse membro - ele tem cargo igual ou superior ao seu.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+    
     try:
         await member.kick(reason=reason)
         if dm_enabled and not member.bot:
@@ -1112,7 +1154,7 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
             title=f"{emoji} Membro removido",
             description=rendered,
             color=color,
-            timestamp=datetime.utcnow()
+            timestamp=_utcnow()
         )
         embed = _style_embed(interaction.guild, embed)
         await interaction.followup.send(embed=embed, ephemeral=True)
@@ -1196,6 +1238,21 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
     mod_cfg = panel_config.get_guild_config(interaction.guild.id, "moderation")
     color = mod_cfg.get("ban_color", 0xFF0000)
     template = mod_cfg.get("ban_message", f"{emoji} {{user}} foi banido do servidor.\n**Motivo:** {{reason}}")
+    
+    # Validar hierarquia de cargos
+    if member.top_role >= interaction.guild.me.top_role:
+        await interaction.followup.send(
+            embed=discord.Embed(description="❌ Não posso banir esse membro - ele tem cargo igual ou superior ao meu.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+    if member.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:
+        await interaction.followup.send(
+            embed=discord.Embed(description="❌ Você não pode banir esse membro - ele tem cargo igual ou superior ao seu.", color=discord.Color.red()),
+            ephemeral=True
+        )
+        return
+    
     try:
         await member.ban(reason=reason)
         if dm_enabled and not member.bot:
@@ -1219,7 +1276,7 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
             title=f"{emoji} Membro banido",
             description=rendered,
             color=color,
-            timestamp=datetime.utcnow()
+            timestamp=_utcnow()
         )
         embed = _style_embed(interaction.guild, embed)
         await interaction.followup.send(embed=embed, ephemeral=True)
@@ -1284,7 +1341,7 @@ async def warn(interaction: discord.Interaction, member: discord.Member, reason:
         title=f"{emoji} Aviso",
         description=rendered,
         color=color,
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -1321,7 +1378,7 @@ async def timeout(interaction: discord.Interaction, member: discord.Member, minu
     if real_minutes <= 0:
         await interaction.response.send_message("❌ Duração inválida.", ephemeral=True)
         return
-    until = datetime.utcnow() + discord.timedelta(minutes=real_minutes)
+    until = _utcnow() + discord.timedelta(minutes=real_minutes)
     try:
         await member.edit(timed_out_until=until, reason=motivo)
         msg_template = mod_cfg.get('timeout_message', '⏳ {user} recebeu timeout por {minutes} min. Motivo: {reason}')
@@ -1344,7 +1401,7 @@ async def metricas(interaction: discord.Interaction):
     if feedback_store:
         avg_feedback = sum(feedback_store.values())/len(feedback_store)
     total_credits = sum(economia.values()) if economia else 0
-    embed = discord.Embed(title='📊 Métricas Básicas', color=discord.Color.purple(), timestamp=datetime.utcnow())
+    embed = discord.Embed(title='📊 Métricas Básicas', color=discord.Color.purple(), timestamp=_utcnow())
     embed.add_field(name='Tickets', value=f"Criados: {tickets_cfg.get('ticket_counter',0)}\nFechados: {tickets_cfg.get('closed_counter',0)}", inline=True)
     embed.add_field(name='Warns', value=f"Total warns registrados: {sum(warn_store.values())}", inline=True)
     embed.add_field(name='Economia', value=f"Usuários: {len(economia)}\nCréditos totais: {total_credits}", inline=True)
@@ -1370,7 +1427,7 @@ async def setlog(interaction: discord.Interaction, canal: discord.TextChannel):
         title="✅ Canal de Log Configurado",
         description=f"Logs de moderação serão enviados para {canal.mention}",
         color=discord.Color.green(),
-        timestamp=datetime.utcnow()
+        timestamp=_utcnow()
     )
     embed = _style_embed(interaction.guild, embed)
     await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -1408,7 +1465,7 @@ async def auto_close_tickets_task():
                         last_msg = msg
                         break
                     if last_msg:
-                        delta = (datetime.utcnow() - last_msg.created_at).total_seconds() / 60
+                        delta = (_utcnow() - last_msg.created_at).total_seconds() / 60
                         if delta >= threshold_minutes:
                             await ch.send('⏰ Ticket fechado automaticamente por inatividade.')
                             await asyncio.sleep(5)
@@ -1448,7 +1505,7 @@ async def sla_check_task():
                             if staff_responded:
                                 break
                     else:
-                        created_delta = (datetime.utcnow() - ch.created_at).total_seconds() / 60
+                        created_delta = (_utcnow() - ch.created_at).total_seconds() / 60
                         if created_delta >= sla_min and alert_roles:
                             mention = ' '.join([f'<@&{rid}>' for rid in alert_roles])
                             await ch.send(f'🚨 SLA excedido! {mention}')
@@ -1510,10 +1567,11 @@ async def on_message(message: discord.Message):
             if log_channel_id:
                 log_ch = message.guild.get_channel(log_channel_id)
                 if log_ch:
-                    log_embed = discord.Embed(title='🤖 Auto-Mod', description=f"Autor: {message.author.mention}\nViolações: {', '.join(set(violations))}", color=discord.Color.red(), timestamp=datetime.utcnow())
+                    log_embed = discord.Embed(title='🤖 Auto-Mod', description=f"Autor: {message.author.mention}\nViolações: {', '.join(set(violations))}", color=discord.Color.red(), timestamp=_utcnow())
                     log_embed = _style_embed(message.guild, log_embed)
                     try: await log_ch.send(embed=log_embed)
                     except Exception: pass
     except Exception:
         pass
     await bot.process_commands(message)
+

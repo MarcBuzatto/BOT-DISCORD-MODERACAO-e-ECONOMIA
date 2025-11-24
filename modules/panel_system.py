@@ -10,7 +10,11 @@ from typing import Dict, Any, Optional, Callable
 import json
 from pathlib import Path
 import re
-from datetime import datetime
+from datetime import datetime, timezone
+
+# Helper para datetime UTC
+def _utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ==================== UTILIDADES ====================
@@ -223,7 +227,7 @@ class ConfigManager:
         if style.get("default_color") and embed.color is None:
             embed.color = style.get("default_color")
         if style.get("use_timestamp") and embed.timestamp is None:
-            embed.timestamp = datetime.utcnow()
+            embed.timestamp = _utcnow()
         if style.get("footer_text") and (not embed.footer or not embed.footer.text):
             footer_icon = style.get("footer_icon")
             if footer_icon:
@@ -369,7 +373,7 @@ class BasePanel(View):
         embed = discord.Embed(
             description=f"✅ {message}",
             color=0x00FF00,
-            timestamp=datetime.utcnow()
+            timestamp=_utcnow()
         )
         embed = self.config_manager.apply_style(self.guild_id, embed)
         try:
@@ -382,7 +386,7 @@ class BasePanel(View):
         embed = discord.Embed(
             description=f"❌ {message}",
             color=0xFF0000,
-            timestamp=datetime.utcnow()
+            timestamp=_utcnow()
         )
         embed = self.config_manager.apply_style(self.guild_id, embed)
         try:
@@ -434,3 +438,4 @@ class RoleSelect(discord.ui.RoleSelect):
     async def callback(self, interaction: discord.Interaction):
         role = self.values[0]
         await self.callback_func(interaction, role)
+
