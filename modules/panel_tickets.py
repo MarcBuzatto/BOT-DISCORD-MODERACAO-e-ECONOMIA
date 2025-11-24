@@ -732,11 +732,12 @@ class OpenTicketButton(discord.ui.Button):
         if priority_selected:
             opener_embed.add_field(name='Prioridade', value=priority_selected, inline=False)
         class TicketControlView(discord.ui.View):
-            def __init__(self):
+            def __init__(self, config_mgr):
                 super().__init__(timeout=None)
+                self.config_manager = config_mgr
                 self.add_item(ClaimTicketButton())
                 self.add_item(CloseTicketButton(self.config_manager))
-        await channel.send(content=interaction.user.mention, embed=opener_embed, view=TicketControlView())
+        await channel.send(content=interaction.user.mention, embed=opener_embed, view=TicketControlView(self.config_manager))
         if not cfg.get('require_initial_form') and not cfg.get('enable_priority'):
             await interaction.response.send_message(f'✅ Ticket criado: {channel.mention}', ephemeral=True)
         else:
