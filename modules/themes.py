@@ -115,27 +115,26 @@ class ThemeSystem:
             
             # Aplicar cores ao módulo de boas-vindas
             welcome_config = self.config_manager.get_guild_config(guild_id, "welcome")
-            welcome_config["cor_embed"] = colors["embed"]
+            welcome_config["color"] = colors["embed"]
             self.config_manager.update_guild_config(guild_id, "welcome", welcome_config)
-            
+
             # Aplicar cores ao módulo de economia
             economy_config = self.config_manager.get_guild_config(guild_id, "economy")
-            economy_config["cor_saldo"] = colors["balance"]
-            economy_config["cor_daily"] = colors["daily"]
+            economy_config["saldo_color"] = colors["balance"]
+            economy_config["daily_color"] = colors["daily"]
             self.config_manager.update_guild_config(guild_id, "economy", economy_config)
-            
+
             # Aplicar cores ao módulo de moderação
             moderation_config = self.config_manager.get_guild_config(guild_id, "moderation")
-            moderation_config["cor_ban"] = colors["error"]
-            moderation_config["cor_kick"] = colors["warning"]
-            moderation_config["cor_mute"] = colors["info"]
-            moderation_config["cor_warn"] = colors["warning"]
+            moderation_config["ban_color"] = colors["error"]
+            moderation_config["kick_color"] = colors["warning"]
+            moderation_config["warn_color"] = colors["warning"]
             self.config_manager.update_guild_config(guild_id, "moderation", moderation_config)
-            
-            # Aplicar cor ao módulo de embeds
-            embeds_config = self.config_manager.get_guild_config(guild_id, "embeds")
-            embeds_config["color"] = colors["embed"]
-            self.config_manager.update_guild_config(guild_id, "embeds", embeds_config)
+
+            # Aplicar cor ao módulo de estilo de embeds
+            embeds_config = self.config_manager.get_guild_config(guild_id, "embed_style")
+            embeds_config["default_color"] = colors["embed"]
+            self.config_manager.update_guild_config(guild_id, "embed_style", embeds_config)
             
             # Salvar tema atual
             theme_config = {

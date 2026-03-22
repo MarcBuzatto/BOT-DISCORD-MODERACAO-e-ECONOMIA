@@ -1,8 +1,24 @@
 # Arquivos de ambiente
 .env
 
-# Configurações locais
+# Configurações e dados locais
 panel_config.json
+economia.json
+economia.tmp
+inventory.json
+inventory.tmp
+config.json
+config.tmp
+stats.json
+form_responses.json
+leveling.json
+leveling.tmp
+giveaways.json
+giveaways.tmp
+reminders.json
+reminders.tmp
+temp_roles.json
+temp_roles.tmp
 
 # Backups e exports
 backups/

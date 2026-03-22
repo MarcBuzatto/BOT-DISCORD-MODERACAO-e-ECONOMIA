@@ -70,11 +70,23 @@ class PanelSelectMenu(Select):
                 description="Configuração de emojis reutilizáveis",
                 emoji="😃",
                 value="emojis"
+            ),
+            discord.SelectOption(
+                label="Níveis/XP",
+                description="Sistema de XP, níveis e cargos por nível",
+                emoji="🏆",
+                value="leveling"
+            ),
+            discord.SelectOption(
+                label="Utilitários",
+                description="Sugestões, starboard e configurações extras",
+                emoji="🔧",
+                value="utilities"
             )
         ]
         
         super().__init__(
-            placeholder="🎛️ Escolha um módulo para configurar",
+            placeholder="Escolha um modulo para configurar",
             options=options,
             min_values=1,
             max_values=1
@@ -102,9 +114,15 @@ class PanelSelectMenu(Select):
         elif module == "emojis":
             from .panel_emojis import EmojisPanel
             panel = EmojisPanel(self.config_manager, self.guild_id, self.author_id)
+        elif module == "leveling":
+            from .panel_leveling import LevelingPanel
+            panel = LevelingPanel(self.config_manager, self.guild_id, self.author_id)
+        elif module == "utilities":
+            from .panel_utilities import UtilitiesPanel
+            panel = UtilitiesPanel(self.config_manager, self.guild_id, self.author_id)
         else:
             await interaction.response.send_message(
-                f"❌ Painel de **{module}** ainda não implementado. Em breve!",
+                "Este modulo ainda nao esta disponivel.",
                 ephemeral=True
             )
             return
@@ -119,36 +137,39 @@ class PanelMainView(View):
     
     def __init__(self, config_manager: ConfigManager, guild_id: int, author_id: int):
         super().__init__(timeout=180)
+        self.author_id = author_id
         self.add_item(PanelSelectMenu(config_manager, guild_id, author_id))
-    
+
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        # Qualquer admin pode usar
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "Somente quem abriu o painel pode interagir.",
+                ephemeral=True
+            )
+            return False
         return True
 
 
 def create_painel_command(config_manager: ConfigManager) -> app_commands.Command:
     """Cria o comando /painel."""
     
-    @app_commands.command(name="painel", description="🎛️ Painel de configuração completo do bot")
+    @app_commands.command(name="painel", description="Painel de configuracao completo do bot")
     @app_commands.checks.has_permissions(administrator=True)
     async def painel_command(interaction: discord.Interaction):
         """Abre o painel de configuração interativo."""
         
         embed = discord.Embed(
-            title="🎛️ Painel de Controle - Bot Premium",
+            title="Painel de Controle",
             description=(
-                "Bem-vindo ao **Centro de Configuração Interativo**!\n\n"
-                "Selecione abaixo o módulo que deseja configurar.\n"
-                "Todas as alterações são salvas automaticamente.\n\n"
-                "**Módulos Disponíveis:**\n"
-                "👋 **Boas-vindas** - Mensagem automática ao entrar (fácil!)\n"
-                "🎫 **Tickets** - Sistema de suporte profissional\n"
-                "💰 **Economia** - Créditos virtuais e loja\n"
-                "🛡️ **Moderação** - Kick, ban, warn com logs\n"
-                "📋 **Logs** - Registre tudo que acontece\n"
-                "🎭 **Autorole** - Cargos automáticos\n"
-                "😃 **Emojis Globais** - Emojis reutilizáveis\n\n"
-                "**🆘 Precisa de ajuda?** Veja `docs/GUIA_RAPIDO.md`\n"
+                "Selecione abaixo o modulo que deseja configurar.\n"
+                "Todas as alteracoes sao salvas automaticamente.\n\n"
+                "**Modulos disponiveis:**\n"
+                "Boas-vindas, Tickets, Economia, Moderacao,\n"
+                "Logs, Autorole, Embeds, Emojis, Niveis/XP, Utilitarios\n\n"
+                "**Outros comandos:**\n"
+                "`/sorteio` `/trabalhar` `/roubar` `/apostar`\n"
+                "`/rank` `/leaderboard` `/sugestao` `/enquete`\n"
+                "`/lembrete` `/cargo-temp` `/serverinfo` `/userinfo`\n"
             ),
             color=0x5865F2,
             timestamp=discord.utils.utcnow()
@@ -156,7 +177,7 @@ def create_painel_command(config_manager: ConfigManager) -> app_commands.Command
         
         embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
         embed.set_footer(
-            text=f"💡 Dica: Comece pelo módulo Tickets ou Boas-vindas | Desenvolvido por MARKIZIN"
+            text="Desenvolvido por MARKIZIN"
         )
         
         view = PanelMainView(config_manager, interaction.guild.id, interaction.user.id)

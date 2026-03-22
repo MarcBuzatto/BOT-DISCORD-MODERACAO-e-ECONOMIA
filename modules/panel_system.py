@@ -182,6 +182,24 @@ class ConfigManager:
                 "thumbnail_url": None,
                 "author_name": None,
                 "author_icon": None
+            },
+            "leveling": {
+                "enabled": False,
+                "xp_min": 15,
+                "xp_max": 25,
+                "xp_cooldown": 60,
+                "notify_channel_id": None,
+                "levelup_message": "🎉 {user} subiu para o **nível {level}**!",
+                "levelup_color": 0xFFD700,
+                "level_roles": {},
+                "ignored_channels": []
+            },
+            "utilities": {
+                "suggestion_channel_id": None,
+                "starboard_channel_id": None,
+                "starboard_threshold": 3,
+                "starboard_emoji": "⭐",
+                "starboard_posted": []
             }
         }
     
@@ -342,7 +360,7 @@ class BasePanel(View):
         """Verifica se o usuário pode usar o painel."""
         if interaction.user.id != self.author_id:
             await interaction.response.send_message(
-                "❌ Apenas quem abriu o painel pode usá-lo.",
+                "Somente quem abriu o painel pode usa-lo.",
                 ephemeral=True
             )
             return False

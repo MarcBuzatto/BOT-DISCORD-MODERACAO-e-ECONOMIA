@@ -1,0 +1,193 @@
+================================================================================
+  BOT DISCORD - GUIA DE HOSPEDAGEM
+  Desenvolvido por: MARKIZIN
+================================================================================
+
+  Voce tem DUAS opcoes para rodar o bot:
+
+  OPCAO A - No seu computador (mais facil, gratis)
+  OPCAO B - Em um servico de hospedagem (bot fica online 24/7)
+
+================================================================================
+  OPCAO A - RODAR NO SEU COMPUTADOR
+================================================================================
+
+  Vantagens: Gratis, simples, sem cadastro
+  Desvantagem: O bot so fica online enquanto seu PC estiver ligado
+
+  Como fazer:
+  1. De duplo-clique em "instalar.bat"
+  2. Siga as instrucoes na tela
+  3. Para iniciar, use "iniciar.bat"
+
+  Veja o arquivo COMO_INSTALAR.txt para instrucoes detalhadas.
+
+================================================================================
+  OPCAO B - HOSPEDAR NA NUVEM (bot online 24/7)
+================================================================================
+
+  Se voce quer que o bot fique ligado o tempo todo sem precisar deixar
+  o computador ligado, use um servico de hospedagem.
+
+  Servicos populares para bots Discord:
+
+  - SquareCloud  (brasileiro, facil)   -> squarecloud.app
+  - Railway      (gratis para comecar) -> railway.app
+  - Render       (gratis para comecar) -> render.com
+  - Discloud     (brasileiro)          -> discloud.com
+
+  Este bot ja vem preparado com os arquivos de configuracao para
+  hospedagem. Voce so precisa fazer o upload dos arquivos.
+
+================================================================================
+  HOSPEDANDO NA SQUARECLOUD (Passo a passo)
+================================================================================
+
+  1. CRIAR CONTA
+     - Acesse: https://squarecloud.app
+     - Crie uma conta (pode usar login com Discord)
+
+  2. PREPARAR OS ARQUIVOS
+     - Selecione TODOS os arquivos do bot
+       (bot.py, requirements.txt, modules/, squarecloud.app, .env)
+     - Clique com botao direito > "Enviar para" > "Pasta compactada"
+     - Isso vai criar um arquivo .zip
+
+     IMPORTANTE: O arquivo .env precisa estar dentro do .zip!
+     Se o .env nao existe ainda, crie ele com o conteudo:
+        DISCORD_TOKEN=seu_token_aqui
+
+  3. FAZER UPLOAD
+     - No painel da SquareCloud, clique em "Add Application"
+     - Selecione o arquivo .zip que voce criou
+     - Clique em "Upload"
+     - Pronto! O bot vai iniciar automaticamente
+
+  4. VER LOGS
+     - No painel da SquareCloud, clique no seu bot
+     - Va em "Logs" para ver se esta funcionando
+     - Se der erro de token, va em "Environment" e adicione:
+       DISCORD_TOKEN = seu_token_aqui
+
+================================================================================
+  HOSPEDANDO NA RAILWAY (Passo a passo)
+================================================================================
+
+  1. CRIAR CONTA
+     - Acesse: https://railway.app
+     - Crie uma conta (pode usar GitHub ou e-mail)
+
+  2. CRIAR PROJETO
+     - No dashboard, clique em "New Project"
+     - Selecione "Deploy from GitHub repo" (se o codigo estiver no GitHub)
+     - OU selecione "Empty Project" > "Add Service" > "Deploy from Local"
+
+  3. CONFIGURAR VARIAVEL DE AMBIENTE
+     - No servico criado, va em "Variables"
+     - Adicione:
+       Nome: DISCORD_TOKEN
+       Valor: seu_token_aqui
+     - Clique em "Add"
+
+  4. DEPLOY
+     - Se usou GitHub, o deploy e automatico
+     - Se fez upload local, suba todos os arquivos do bot
+     - Railway detecta o Procfile automaticamente
+
+================================================================================
+  HOSPEDANDO NA RENDER (Passo a passo)
+================================================================================
+
+  1. CRIAR CONTA
+     - Acesse: https://render.com
+     - Crie uma conta
+
+  2. CRIAR SERVICO
+     - Clique em "New" > "Background Worker"
+     - Conecte seu repositorio GitHub
+     - OU use "Deploy from existing image"
+
+  3. CONFIGURAR
+     - Build Command: pip install -r requirements.txt
+     - Start Command: python bot.py
+     - Em "Environment", adicione:
+       DISCORD_TOKEN = seu_token_aqui
+
+  4. DEPLOY
+     - Clique em "Create Background Worker"
+     - Aguarde o deploy finalizar
+
+================================================================================
+  HOSPEDANDO EM VPS (usuarios avancados)
+================================================================================
+
+  Se voce tem um VPS Linux (Ubuntu/Debian):
+
+  1. ENVIAR ARQUIVOS
+     scp -r . usuario@seu-vps:/home/usuario/bot-discord/
+
+  2. INSTALAR DEPENDENCIAS
+     cd /home/usuario/bot-discord
+     sudo apt update && sudo apt install python3 python3-pip -y
+     pip3 install -r requirements.txt
+
+  3. CONFIGURAR TOKEN
+     echo "DISCORD_TOKEN=seu_token_aqui" > .env
+
+  4. RODAR COM SYSTEMD (fica ligado 24/7 e reinicia sozinho)
+
+     Crie o arquivo de servico:
+     sudo nano /etc/systemd/system/discord-bot.service
+
+     Cole este conteudo:
+     [Unit]
+     Description=Bot Discord - Moderacao + Economia
+     After=network.target
+
+     [Service]
+     Type=simple
+     User=usuario
+     WorkingDirectory=/home/usuario/bot-discord
+     ExecStart=/usr/bin/python3 bot.py
+     Restart=always
+     RestartSec=10
+
+     [Install]
+     WantedBy=multi-user.target
+
+     Salve e execute:
+     sudo systemctl daemon-reload
+     sudo systemctl enable discord-bot
+     sudo systemctl start discord-bot
+
+  5. VER LOGS
+     sudo journalctl -u discord-bot -f
+
+================================================================================
+  DICAS IMPORTANTES PARA HOSPEDAGEM
+================================================================================
+
+  - O token NUNCA deve ser colocado diretamente no codigo
+    Sempre use o arquivo .env ou variaveis de ambiente do servico
+
+  - Se o servico de hospedagem pedir "Dockerfile", voce nao precisa
+    O bot ja tem Procfile e runtime.txt que funcionam automaticamente
+
+  - Backups ficam salvos na pasta "backups/" do bot
+    Se voce hospedar na nuvem, os backups ficam la
+    Faca download periodicamente para nao perder
+
+  - Ao mudar de hospedagem, lembre-se de levar:
+    - Todos os arquivos do bot
+    - economia.json (dados de saldo dos usuarios)
+    - panel_config.json (configuracoes do painel)
+    - stats.json (estatisticas)
+
+================================================================================
+  SUPORTE
+================================================================================
+
+  Desenvolvedor: MARKIZIN
+  Perfil: https://ggmax.com.br/perfil/markizin002
+
+================================================================================

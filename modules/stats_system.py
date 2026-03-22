@@ -15,7 +15,8 @@ class StatsSystem:
         self.config_manager = config_manager
         self.stats_file = Path("stats.json")
         self.stats = self._load_stats()
-    
+        self._dirty = False
+
     def _load_stats(self) -> dict:
         """Carrega estatísticas do arquivo."""
         if not self.stats_file.exists():
@@ -23,16 +24,26 @@ class StatsSystem:
         try:
             with open(self.stats_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except Exception:
             return {}
-    
+
     def _save_stats(self):
         """Salva estatísticas no arquivo."""
         try:
             with open(self.stats_file, 'w', encoding='utf-8') as f:
                 json.dump(self.stats, f, indent=2, ensure_ascii=False)
+            self._dirty = False
         except Exception as e:
             print(f"Erro ao salvar estatísticas: {e}")
+
+    def _mark_dirty(self):
+        """Marca que há dados não salvos. O save periódico cuida do resto."""
+        self._dirty = True
+
+    def flush(self):
+        """Salva em disco se houver alterações pendentes."""
+        if self._dirty:
+            self._save_stats()
     
     def _ensure_guild_stats(self, guild_id: int):
         """Garante que a estrutura de estatísticas existe para o servidor."""
@@ -82,7 +93,7 @@ class StatsSystem:
             self.stats[guild_key]["commands"][command_name] = 0
         
         self.stats[guild_key]["commands"][command_name] += 1
-        self._save_stats()
+        self._mark_dirty()
     
     def track_ticket(self, guild_id: int, action: str, category: str = None, user_id: int = None):
         """Rastreia ações de tickets."""
@@ -103,7 +114,7 @@ class StatsSystem:
         elif action == "closed":
             self.stats[guild_key]["tickets"]["closed"] += 1
         
-        self._save_stats()
+        self._mark_dirty()
     
     def track_economy(self, guild_id: int, action: str, amount: int = 0):
         """Rastreia ações de economia."""
@@ -118,7 +129,7 @@ class StatsSystem:
         elif action == "shop":
             self.stats[guild_key]["economy"]["shop_purchases"] += 1
         
-        self._save_stats()
+        self._mark_dirty()
     
     def track_moderation(self, guild_id: int, action: str, moderator_id: int = None):
         """Rastreia ações de moderação."""
@@ -137,7 +148,7 @@ class StatsSystem:
                     }
                 self.stats[guild_key]["moderation"]["by_moderator"][mod_key][action_key] += 1
         
-        self._save_stats()
+        self._mark_dirty()
     
     def track_autorole(self, guild_id: int, action: str, role_id: int = None):
         """Rastreia ações de autorole."""
@@ -155,7 +166,7 @@ class StatsSystem:
                 self.stats[guild_key]["autorole"]["by_role"][role_key] = {"given": 0, "removed": 0}
             self.stats[guild_key]["autorole"]["by_role"][role_key][action] += 1
         
-        self._save_stats()
+        self._mark_dirty()
     
     def get_guild_stats(self, guild_id: int) -> dict:
         """Retorna estatísticas completas do servidor."""
@@ -168,7 +179,7 @@ class StatsSystem:
         if guild_key in self.stats:
             del self.stats[guild_key]
         self._ensure_guild_stats(guild_id)
-        self._save_stats()
+        self._mark_dirty()
 
 class StatsView(discord.ui.View):
     def __init__(self, guild: discord.Guild, stats_system: StatsSystem):
@@ -551,6 +562,18 @@ class StatsCommands(commands.Cog):
 
 async def setup(bot: commands.Bot, config_manager):
     """Configura o sistema de estatísticas."""
+    from discord.ext import tasks
+
     stats_system = StatsSystem(config_manager)
+
+    @tasks.loop(seconds=60)
+    async def _stats_flush_loop():
+        stats_system.flush()
+
+    @_stats_flush_loop.before_loop
+    async def _before_flush():
+        await bot.wait_until_ready()
+
+    _stats_flush_loop.start()
     await bot.add_cog(StatsCommands(bot, stats_system))
     return stats_system

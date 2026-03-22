@@ -1,92 +1,164 @@
 ================================================================================
-🎨 BOT DISCORD - MODERAÇÃO + ECONOMIA
-Desenvolvido por: MARKIZIN
+  BOT DISCORD - MODERACAO + ECONOMIA
+  Desenvolvido por: MARKIZIN
 ================================================================================
 
-📋 REQUISITOS:
-- Python 3.8 ou superior
-- Conta Discord Developer (para criar o bot)
+  INSTALACAO SUPER FACIL (2 passos!)
+
+  QUER HOSPEDAR NA NUVEM (bot online 24/7)?
+  Veja o arquivo COMO_HOSPEDAR.txt para opcoes de hospedagem
 
 ================================================================================
-⚙️ INSTALAÇÃO:
+  PASSO 1 - INSTALAR O PYTHON
+================================================================================
 
-1. INSTALAR PYTHON:
-   - Baixe em: https://www.python.org/downloads/
-   - Durante instalação, marque "Add Python to PATH"
+  Se voce JA tem Python instalado, pule para o Passo 2.
 
-2. INSTALAR DEPENDÊNCIAS:
-   - Abra o terminal nesta pasta
-   - Execute: pip install -r requirements.txt
-
-3. CONFIGURAR TOKEN:
-   - Abra o arquivo ".env"
-   - Substitua "SEU_TOKEN_AQUI" pelo token do seu bot
-   - Para obter o token:
-     a) Acesse: https://discord.com/developers/applications
-     b) Clique no seu bot > Bot > Reset Token
-     c) Copie o token gerado
-
-4. CONFIGURAR PERMISSÕES DO BOT:
-   - No Discord Developer Portal:
-   - Bot > Privileged Gateway Intents:
-     ✅ MESSAGE CONTENT INTENT
-     ✅ SERVER MEMBERS INTENT
-   - OAuth2 > URL Generator:
-     Scopes: bot, applications.commands
-     Permissions: Administrator (ou personalize)
+  1. Acesse: https://www.python.org/downloads/
+  2. Clique no botao amarelo "Download Python"
+  3. Execute o instalador
+  4. MUITO IMPORTANTE: Marque a opcao "Add Python to PATH"
+     (aparece na primeira tela do instalador, embaixo)
+  5. Clique em "Install Now"
+  6. Espere terminar e feche
 
 ================================================================================
-🚀 INICIAR O BOT:
+  PASSO 2 - INSTALAR E CONFIGURAR O BOT
+================================================================================
 
-WINDOWS:
-  python bot.py
+  1. De DUPLO-CLIQUE no arquivo "instalar.bat"
+  2. Ele vai:
+     - Verificar se o Python esta instalado
+     - Instalar as dependencias automaticamente
+     - Pedir o TOKEN do seu bot (veja abaixo como obter)
+     - Salvar tudo certinho
 
-LINUX/MAC:
-  python3 bot.py
+  Pronto! Para iniciar o bot depois, use o "iniciar.bat"
 
 ================================================================================
-📚 COMANDOS PRINCIPAIS:
+  COMO OBTER O TOKEN DO BOT
+================================================================================
 
-/painel - Abre painel de configuração principal
-/backup - Cria backup das configurações
-/restore - Restaura backup anterior
-/tema - Gerencia temas visuais
-/permissoes - Configura permissões por cargo
-/stats - Estatísticas avançadas
-/antiraid - Sistema anti-raid
-/formulario - Criar formulários customizados
+  1. Acesse: https://discord.com/developers/applications
+  2. Faca login com sua conta Discord
+  3. Clique em "New Application" (botao azul, canto superior direito)
+  4. De um nome para o bot e clique "Create"
+  5. No menu lateral, clique em "Bot"
+  6. Clique em "Reset Token" e confirme
+  7. COPIE o token que apareceu (ele so aparece uma vez!)
+
+  CONFIGURACOES IMPORTANTES no Discord Developer Portal:
+
+  Ainda na pagina "Bot", ative:
+     MESSAGE CONTENT INTENT
+     SERVER MEMBERS INTENT
+
+  (Sao duas opcoes que ficam mais embaixo na pagina, ative as duas)
 
 ================================================================================
-🛡️ MÓDULOS INCLUÍDOS:
+  COMO CONVIDAR O BOT PARA SEU SERVIDOR
+================================================================================
 
-✅ Sistema de Tickets
-✅ Boas-vindas e Despedidas
-✅ Economia (Daily, Saldo, Transferências)
-✅ Moderação (Ban, Kick, Mute, Warn, Timeout)
-✅ Logs Avançados
-✅ Autorole (Reaction Roles)
-✅ Embeds Personalizados
-✅ Emojis Globais
-✅ Sistema de Backup Automático
-✅ Temas Predefinidos (5 temas)
-✅ Permissões por Cargo
-✅ Importar/Exportar Configs
-✅ Estatísticas Detalhadas
-✅ Anti-Raid Automático
-✅ Formulários Customizados
+  1. No Discord Developer Portal, va em OAuth2 > URL Generator
+  2. Em "Scopes", marque:
+     - bot
+     - applications.commands
+  3. Em "Bot Permissions", marque:
+     - Administrator (mais facil) ou escolha as permissoes que quiser
+  4. Copie o link gerado la embaixo
+  5. Cole no navegador e escolha o servidor
 
 ================================================================================
-⚠️ AVISOS IMPORTANTES:
+  COMO USAR O BOT NO DIA A DIA
+================================================================================
 
-- Nunca compartilhe o arquivo .env (contém o token)
-- Faça backups regulares com /backup
-- Configure permissões antes de dar acesso a moderadores
-- Teste em servidor de testes primeiro
+  Para INICIAR o bot:
+    De duplo-clique em "iniciar.bat"
+    (mantenha a janela preta aberta enquanto quiser o bot ligado)
+
+  Para PARAR o bot:
+    Feche a janela preta ou pressione Ctrl+C
+
+  Se o bot parar sozinho:
+    O "iniciar.bat" vai perguntar se quer reiniciar
 
 ================================================================================
-📞 SUPORTE:
+  COMANDOS PRINCIPAIS (use no Discord)
+================================================================================
 
-Desenvolvedor: MARKIZIN
-Perfil: https://ggmax.com.br/perfil/markizin002
+  /painel      - Abre o painel de configuracao (faz tudo por aqui!)
+  /saldo       - Ver seu saldo de creditos
+  /daily       - Coletar creditos diarios
+  /transferir  - Transferir creditos para alguem
+  /top         - Ranking de maiores saldos
+  /shop        - Ver loja de itens
+  /buy         - Comprar um item
+  /kick        - Expulsar membro (moderacao)
+  /ban         - Banir membro (moderacao)
+  /warn        - Avisar membro (moderacao)
+  /timeout     - Dar timeout em membro
+  /backup      - Criar backup das configuracoes
+  /restore     - Restaurar backup
+  /tema        - Mudar tema visual do bot
+  /permissoes  - Configurar permissoes por cargo
+  /stats       - Ver estatisticas detalhadas
+  /antiraid    - Configurar protecao anti-raid
+  /formulario  - Criar formularios customizados
+
+================================================================================
+  MODULOS INCLUIDOS
+================================================================================
+
+  - Sistema de Tickets (suporte com categorias)
+  - Boas-vindas e Despedidas personalizaveis
+  - Economia (Daily, Saldo, Transferencias, Loja)
+  - Moderacao (Ban, Kick, Warn, Timeout, Auto-mod)
+  - Logs Avancados (por categoria)
+  - Autorole (Reaction Roles)
+  - Embeds Personalizados (estilo global)
+  - Emojis Customizados
+  - Sistema de Backup Automatico
+  - 5 Temas Visuais
+  - Permissoes por Cargo
+  - Importar/Exportar Configuracoes
+  - Estatisticas Detalhadas
+  - Anti-Raid Automatico
+  - Formularios Customizados
+
+================================================================================
+  AVISOS IMPORTANTES
+================================================================================
+
+  - NUNCA compartilhe o arquivo .env (contem o token do bot)
+  - Faca backups regulares com /backup
+  - Configure permissoes antes de dar acesso a moderadores
+  - Teste em servidor de testes primeiro
+
+================================================================================
+  PROBLEMAS COMUNS
+================================================================================
+
+  "Python nao encontrado":
+    -> Reinstale o Python marcando "Add Python to PATH"
+
+  "Token invalido":
+    -> Va no Discord Developer Portal e gere um novo token
+    -> Edite o arquivo .env ou execute instalar.bat novamente
+
+  "O bot nao responde aos comandos":
+    -> Verifique se MESSAGE CONTENT INTENT esta ativo
+    -> Verifique se o bot tem permissao Administrator
+    -> Espere 1-2 minutos (comandos slash podem demorar para sincronizar)
+
+  "Erro ao instalar dependencias":
+    -> Abra o Prompt de Comando como Administrador
+    -> Execute: pip install -r requirements.txt
+
+================================================================================
+  SUPORTE
+================================================================================
+
+  Desenvolvedor: MARKIZIN
+  Perfil: https://ggmax.com.br/perfil/markizin002
 
 ================================================================================

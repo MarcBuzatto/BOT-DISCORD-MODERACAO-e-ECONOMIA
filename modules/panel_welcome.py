@@ -434,24 +434,6 @@ class ManualWelcomeButton(Button):
         embed.set_footer(text="💡 Dica: Use Preview antes de ativar! Teste as variáveis para garantir que funcionam.")
         embed = self.panel.config_manager.apply_style(self.panel.guild_id, embed)
         await interaction.response.send_message(embed=embed, ephemeral=True)
-    
-    def __init__(self, panel: WelcomePanel):
-        super().__init__(
-            label="Miniatura",
-            style=discord.ButtonStyle.secondary,
-            emoji="🎴",
-            row=2
-        )
-        self.panel = panel
-    
-    async def callback(self, interaction: discord.Interaction):
-        async def save_thumbnail(inter: discord.Interaction, url: str, field_type: str):
-            self.panel.update_config({'thumbnail_url': url})
-            await self.panel.send_success(inter, "Miniatura atualizada!")
-            await self.panel.refresh(inter)
-        
-        modal = ImageURLModal(callback=save_thumbnail, field_type="thumbnail")
-        await interaction.response.send_modal(modal)
 
 
 class SetChannelButton(Button):

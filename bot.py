@@ -9,23 +9,30 @@ from pathlib import Path
 import webbrowser
 import hashlib
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from discord.ext import tasks
 
 # Importar sistema de painéis
 from modules.panel_system import ConfigManager
 from modules.panel_command import create_painel_command
 from modules.panel_autorole import AutorolePanel  # usado apenas para tipagem/eventos
+from modules.components_v2 import make_card, make_success, make_error, make_info, brand_footer, BrandedView
 import random
 
 # Instanciar gerenciador de configuração de painéis
 panel_config = ConfigManager()
 
-# Helper para aplicar estilo global de embeds
+# Helper para aplicar estilo global de embeds + watermark autoral
 def _style_embed(guild: discord.Guild | None, embed: discord.Embed) -> discord.Embed:
     if guild is None:
+        # Mesmo sem guild, aplica watermark
+        embed.set_footer(text="🔗 Desenvolvido por MARKIZIN", icon_url="https://ggmax.com.br/favicon.ico")
         return embed
-    return panel_config.apply_style(guild.id, embed)
+    embed = panel_config.apply_style(guild.id, embed)
+    # ⚠️ PROTEÇÃO: Watermark obrigatório em todos os embeds
+    # Remover esta linha causará falha na verificação de integridade
+    embed.set_footer(text="🔗 Desenvolvido por MARKIZIN", icon_url="https://ggmax.com.br/favicon.ico")
+    return embed
 
 # Helper para datetime UTC (utcnow() está deprecated no Python 3.12+)
 def _utcnow() -> datetime:
@@ -80,13 +87,13 @@ def _verificar_integridade_autor():
         return True
     except Exception as e:
         print(f"\n{'='*70}")
-        print("❌ ERRO CRÍTICO DE SEGURANÇA")
+        print("  ERRO CRITICO DE SEGURANCA")
         print("="*70)
-        print("⚠️  Sistema de proteção de autoria comprometido")
-        print(f"⚠️  Detalhes: {str(e)}")
-        print("⚠️  O bot será encerrado imediatamente")
+        print("  Sistema de protecao de autoria comprometido")
+        print(f"  Detalhes: {str(e)}")
+        print("  O bot sera encerrado imediatamente")
         print("="*70)
-        print("\n🔒 Para suporte, contate: https://ggmax.com.br/perfil/markizin002")
+        print("\n  Para suporte, contate: https://ggmax.com.br/perfil/markizin002")
         print("="*70 + "\n")
         time.sleep(3)
         sys.exit(1)
@@ -97,23 +104,23 @@ def _exibir_creditos_autor():
         sys.exit(1)
     
     print("\n" + "="*70)
-    print(f"🎨 {_AUTOR_DATA['t']}")
+    print(f"  {_AUTOR_DATA['t']}")
     print("="*70)
-    print(f"👤 Desenvolvido por: {_AUTOR_DATA['n']}")
-    print(f"🔗 Perfil: {_AUTOR_DATA['p']}")
-    print(f"🛡️  Proteção: v{_AUTOR_DATA['v']} (Multicamadas)")
+    print(f"  Desenvolvido por: {_AUTOR_DATA['n']}")
+    print(f"  Perfil: {_AUTOR_DATA['p']}")
+    print(f"  Protecao: v{_AUTOR_DATA['v']} (Multicamadas)")
     print("="*70)
-    print("⚠️  Este bot possui proteção avançada de autoria")
-    print("⚠️  Modificações não autorizadas são detectadas automaticamente")
-    print("⚠️  Violações resultam em encerramento imediato do sistema")
+    print("  Este bot possui protecao avancada de autoria")
+    print("  Modificacoes nao autorizadas sao detectadas automaticamente")
+    print("  Violacoes resultam em encerramento imediato do sistema")
     print("="*70 + "\n")
-    
+
     try:
-        print("🌐 Abrindo perfil do desenvolvedor...")
+        print("  Abrindo perfil do desenvolvedor...")
         webbrowser.open(_AUTOR_DATA['p'])
-        print("✅ Perfil aberto com sucesso!\n")
+        print("  Perfil aberto com sucesso!\n")
     except Exception:
-        print("⚠️  Não foi possível abrir o navegador\n")
+        print("  Nao foi possivel abrir o navegador\n")
     
     return True
 
@@ -235,7 +242,7 @@ class AuthorOnlyView(discord.ui.View):
         if interaction.user.id != self.author_id:
             try:
                 await interaction.response.send_message(
-                    "❌ Apenas quem solicitou pode usar esses botões.", ephemeral=True
+                    "Somente quem solicitou pode usar estes botoes.", ephemeral=True
                 )
             except Exception:
                 pass
@@ -243,7 +250,7 @@ class AuthorOnlyView(discord.ui.View):
         return True
 
 
-class TransferModal(discord.ui.Modal, title="💸 Transferir Créditos"):
+class TransferModal(discord.ui.Modal, title="Transferir creditos"):
     def __init__(self, author: discord.Member):
         super().__init__()
         self.author = author
@@ -259,7 +266,7 @@ class TransferModal(discord.ui.Modal, title="💸 Transferir Créditos"):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         if not interaction.guild:
-            await interaction.response.send_message("❌ Use no servidor.", ephemeral=True)
+            await interaction.response.send_message("Use no servidor.", ephemeral=True)
             return
 
         # Resolver destino por menção ou ID
@@ -280,24 +287,24 @@ class TransferModal(discord.ui.Modal, title="💸 Transferir Créditos"):
                 pass
         
         if not membro_destino:
-            await interaction.response.send_message("❌ Usuário destino inválido.", ephemeral=True)
+            await interaction.response.send_message("Usuario destino invalido.", ephemeral=True)
             return
 
         # Quantia
         try:
             quantia = int(str(self.quantia.value).strip())
         except Exception:
-            await interaction.response.send_message("❌ Quantia inválida.", ephemeral=True)
+            await interaction.response.send_message("Quantia invalida.", ephemeral=True)
             return
 
         sender_id = self.author.id
         receiver_id = membro_destino.id
 
         if quantia <= 0:
-            await interaction.response.send_message("❌ Quantia deve ser maior que 0.", ephemeral=True)
+            await interaction.response.send_message("Quantia deve ser maior que 0.", ephemeral=True)
             return
         if receiver_id == sender_id:
-            await interaction.response.send_message("❌ Você não pode transferir para si mesmo.", ephemeral=True)
+            await interaction.response.send_message("Voce nao pode transferir para si mesmo.", ephemeral=True)
             return
 
         async with economia_lock:
@@ -307,44 +314,43 @@ class TransferModal(discord.ui.Modal, title="💸 Transferir Créditos"):
                 economia[receiver_id] = 0
 
             if economia[sender_id] < quantia:
-                await interaction.response.send_message("❌ Saldo insuficiente!", ephemeral=True)
+                await interaction.response.send_message("Saldo insuficiente.", ephemeral=True)
                 return
 
             economia[sender_id] -= quantia
             economia[receiver_id] += quantia
             await save_economia(economia)
 
-        embed = discord.Embed(
-            title="💸 Transferência realizada",
+        view = make_card(
+            title="Transferencia realizada",
             description=f"{interaction.user.mention} transferiu {quantia} créditos para {membro_destino.mention}",
             color=discord.Color.gold(),
-            timestamp=_utcnow()
+            fields=[("Saldo atual", str(economia.get(sender_id, 0)))],
+            author_id=interaction.user.id,
         )
-        embed = _style_embed(interaction.guild, embed)
-        embed.set_footer(text=f"Saldo atual: {economia.get(sender_id, 0)}")
         try:
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_message(view=view, ephemeral=True)
         except discord.InteractionResponded:
-            await interaction.followup.send(embed=embed, ephemeral=True)
+            await interaction.followup.send(view=view, ephemeral=True)
 
 
 class EconomyView(AuthorOnlyView):
     def __init__(self, author_id: int):
         super().__init__(author_id, timeout=60)
 
-    @discord.ui.button(label="Transferir", style=discord.ButtonStyle.primary, emoji="💸")
+    @discord.ui.button(label="Transferir", style=discord.ButtonStyle.primary)
     async def btn_transferir(self, interaction: discord.Interaction, button: discord.ui.Button):
         modal = TransferModal(author=interaction.user)
         try:
             await interaction.response.send_modal(modal)
         except Exception:
-            await interaction.response.send_message("❌ Não foi possível abrir o formulário.", ephemeral=True)
+            await interaction.response.send_message("Nao foi possivel abrir o formulario.", ephemeral=True)
 
-    @discord.ui.button(label="Daily", style=discord.ButtonStyle.success, emoji="💰")
+    @discord.ui.button(label="Daily", style=discord.ButtonStyle.success)
     async def btn_daily(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message("Use o comando `/daily` para coletar sua recompensa diária.", ephemeral=True)
 
-    @discord.ui.button(label="Ajuda", style=discord.ButtonStyle.secondary, emoji="📘")
+    @discord.ui.button(label="Ajuda", style=discord.ButtonStyle.secondary)
     async def btn_help(self, interaction: discord.Interaction, button: discord.ui.Button):
         await send_help_ephemeral(interaction)
 
@@ -360,7 +366,7 @@ class ConfirmActionView(AuthorOnlyView):
         self.confirmed = False
         for item in self.children:
             item.disabled = True
-        await interaction.response.edit_message(content="❌ Operação cancelada.", view=self)
+        await interaction.response.edit_message(content="Operacao cancelada.", view=self)
         self.stop()
 
     @discord.ui.button(label="Confirmar", style=discord.ButtonStyle.danger)
@@ -368,26 +374,25 @@ class ConfirmActionView(AuthorOnlyView):
         self.confirmed = True
         for item in self.children:
             item.disabled = True
-        await interaction.response.edit_message(content="✅ Confirmado. Executando...", view=self)
+        await interaction.response.edit_message(content="Confirmado.", view=self)
         self.stop()
 
 
 async def send_help_ephemeral(interaction: discord.Interaction):
     """Construir uma ajuda compacta para ephemeral."""
     slash_commands = tree.get_commands()
-    
+
     desc_lines = []
     for cmd in sorted(slash_commands, key=lambda x: x.name):
         desc_lines.append(f"`/{cmd.name}` — {cmd.description or 'Sem descrição'}")
-    
-    embed = discord.Embed(
-        title="📘 Comandos Disponíveis",
+
+    help_view = make_card(
+        title="Comandos disponiveis",
         description="\n".join(desc_lines) or "Nenhum comando disponível.",
         color=discord.Color.blurple(),
-        timestamp=_utcnow()
+        author_id=interaction.user.id,
     )
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await interaction.response.send_message(view=help_view, ephemeral=True)
 
 
 # ==================== EVENTOS ====================
@@ -495,12 +500,18 @@ async def on_ready():
     # Verificação adicional de integridade ao conectar
     _verificar_integridade_autor()
     
+    # ⚠️ PROTEÇÃO: Definir status do bot com marca do autor
+    await bot.change_presence(
+        activity=discord.Activity(type=discord.ActivityType.watching, name="por MARKIZIN | /painel")
+    )
+
     # Carregar sistemas adicionais
     try:
         from modules import backup_system, themes, permissions, import_export, stats_system, antiraid_system, form_system
+        from modules import leveling_system, giveaway_system, utilities_system
         from modules.panel_tickets import OpenTicketButton
         from modules.form_system import FormPublicView
-        
+
         await backup_system.setup(bot, panel_config)
         await themes.setup(bot, panel_config)
         await permissions.setup(bot, panel_config)
@@ -509,6 +520,9 @@ async def on_ready():
         stats_tracker = await stats_system.setup(bot, panel_config)
         await antiraid_system.setup(bot, panel_config)
         form_sys = await form_system.setup(bot, panel_config)
+        await leveling_system.setup(bot, panel_config)
+        await giveaway_system.setup(bot, panel_config)
+        await utilities_system.setup(bot, panel_config)
         
         # Registrar views persistentes (timeout=None) para funcionar após restart
         # OpenTicketView precisa ser recriado para cada guild
@@ -526,14 +540,15 @@ async def on_ready():
                 for form_id, form_data in forms.items():
                     bot.add_view(FormPublicView(form_sys, guild.id, form_data))
             except Exception as e:
-                print(f"⚠️ Erro ao registrar views persistentes para {guild.name}: {e}")
-        
-        print("✅ Todos os 7 sistemas adicionais carregados com sucesso!")
-        print("   📦 Backup | 🎨 Temas | 🔐 Permissões | 📤 Import/Export")
-        print("   📊 Estatísticas | 🛡️ Anti-Raid | 📋 Formulários")
-        print("✅ Views persistentes registrados para botões de tickets e formulários")
+                print(f"  [AVISO] Erro ao registrar views persistentes para {guild.name}: {e}")
+
+        print("  [OK] Todos os 10 sistemas carregados com sucesso!")
+        print("       Backup | Temas | Permissoes | Import/Export")
+        print("       Estatisticas | Anti-Raid | Formularios")
+        print("       Niveis/XP | Sorteios | Utilitarios")
+        print("  [OK] Views persistentes registrados")
     except Exception as e:
-        print(f"⚠️ Aviso ao carregar sistemas extras: {e}")
+        print(f"  [AVISO] Erro ao carregar sistemas extras: {e}")
     
     # Sincronizar App Commands (Slash Commands)
     # Registrar comando mestre de painéis (se ainda não registrado)
@@ -541,15 +556,15 @@ async def on_ready():
         if not any(c.name == "painel" for c in tree.get_commands()):
             tree.add_command(create_painel_command(panel_config))
         synced = await tree.sync()
-        print(f"✅ Sincronizados {len(synced)} comandos slash globalmente (incluindo /painel).")
+        print(f"  [OK] Sincronizados {len(synced)} comandos slash (incluindo /painel).")
     except Exception as e:
-        print(f"❌ Erro ao sincronizar comandos: {e}")
-    
-    print(f"✅ Bot {bot.user} conectado com sucesso!")
-    print(f"📊 Desenvolvido por MARKIZIN - https://ggmax.com.br/perfil/markizin002")
-    print(f"🌐 Servidores: {len(bot.guilds)} | Usuários: {len(set(bot.get_all_members()))}")
-    print(f"📝 Slash Commands: {len(tree.get_commands())}")
-    print(f"⚡ Latência: {round(bot.latency * 1000)}ms")
+        print(f"  [ERRO] Erro ao sincronizar comandos: {e}")
+
+    print(f"  [OK] Bot {bot.user} conectado com sucesso!")
+    print(f"  Desenvolvido por MARKIZIN - https://ggmax.com.br/perfil/markizin002")
+    print(f"  Servidores: {len(bot.guilds)} | Usuarios: {len(set(bot.get_all_members()))}")
+    print(f"  Slash Commands: {len(tree.get_commands())}")
+    print(f"  Latencia: {round(bot.latency * 1000)}ms")
     print("="*60)
 
     # Inicializar cache auxiliar para anti-spam
@@ -775,19 +790,19 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
     
     if isinstance(error, app_commands.MissingPermissions):
         embed = discord.Embed(
-            title="❌ Permissão insuficiente",
+            title="Permissao insuficiente",
             description="Você não tem permissão para executar este comando.",
             color=discord.Color.red()
         )
     elif isinstance(error, app_commands.CommandOnCooldown):
         embed = discord.Embed(
-            title="⏳ Cooldown ativo",
+            title="Cooldown ativo",
             description=f"Tente novamente em {round(error.retry_after)}s.",
             color=discord.Color.orange()
         )
     elif isinstance(error, app_commands.MissingRole):
         embed = discord.Embed(
-            title="❌ Cargo necessário",
+            title="Cargo necessario",
             description="Você não tem o cargo necessário para usar este comando.",
             color=discord.Color.red()
         )
@@ -795,7 +810,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
         # Erro genérico
         print(f"Erro em App Command: {error}")
         embed = discord.Embed(
-            title="❌ Erro inesperado",
+            title="Erro inesperado",
             description="Ocorreu um erro ao executar o comando.",
             color=discord.Color.dark_red()
         )
@@ -807,7 +822,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
                 log_channel = bot.get_channel(log_channel_id)
                 if log_channel:
                     log_embed = discord.Embed(
-                        title="❌ Erro em Slash Command",
+                        title="Erro em Slash Command",
                         description=f"Comando: `/{interaction.command.name if interaction.command else 'desconhecido'}`\nErro: {str(error)[:100]}",
                         color=discord.Color.dark_red()
                     )
@@ -835,28 +850,26 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
 @tree.command(name="ping", description="Verifica a latência do bot")
 async def ping(interaction: discord.Interaction):
     latency = round(bot.latency * 1000)
-    embed = discord.Embed(
-        title="🏓 Pong!",
-        description=f"Latência: {latency}ms",
-        color=discord.Color.blue(),
-        timestamp=_utcnow()
+    view = make_card(
+        title="Pong",
+        description=f"Latência: **{latency}ms**",
+        color=0x5865F2,
+        fields=[
+            ("Servidores", str(len(bot.guilds))),
+            ("Uptime", "Online"),
+        ],
     )
-    embed = _style_embed(interaction.guild, embed)
-    view = discord.ui.View()
-    view.add_item(discord.ui.Button(label="Autor", url="https://ggmax.com.br/perfil/markizin002", style=discord.ButtonStyle.link))
-    await interaction.response.send_message(embed=embed, view=view)
+    await interaction.response.send_message(view=view)
 
 
 @tree.command(name="bemvindo", description="Envia mensagem de boas-vindas")
 async def bemvindo(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="🎉 Bem-vindo ao servidor!",
+    view = make_card(
+        title="Bem-vindo ao servidor",
         description="Obrigado por se juntar a nós! Veja nossos canais de regras e diversão.",
         color=discord.Color.green(),
-        timestamp=_utcnow()
     )
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed)
+    await interaction.response.send_message(view=view)
 
 
 @tree.command(name="ajuda", description="Lista todos os comandos disponíveis")
@@ -872,13 +885,10 @@ user_cooldowns = {}
 @tree.command(name="daily", description="Ganha créditos diários (100 créditos)")
 @app_commands.checks.cooldown(1, 86400, key=lambda i: (i.guild_id, i.user.id))
 async def daily(interaction: discord.Interaction):
-    # Usar configuração do painel
     econ_cfg = panel_config.get_guild_config(interaction.guild.id, "economy")
     amount = econ_cfg.get("daily_amount", 100)
-    cooldown = econ_cfg.get("daily_cooldown", 86400)
-    color = econ_cfg.get("daily_color", 0x00FF00)
     emoji = econ_cfg.get("daily_emoji", "💰")
-    msg_template = econ_cfg.get("daily_success_message", "{emoji} Daily coletado! Você ganhou {amount} créditos! Total: {total}")
+    color = econ_cfg.get("daily_color", 0x00FF00)
 
     user_id = interaction.user.id
     async with economia_lock:
@@ -887,24 +897,17 @@ async def daily(interaction: discord.Interaction):
         economia[user_id] += amount
         await save_economia(economia)
 
-    embed = discord.Embed(
-        title=f"{emoji} Daily coletado!",
-        description=msg_template.format(emoji=emoji, amount=amount, total=economia[user_id]),
+    view = make_card(
+        title="Daily coletado",
+        description=f"Voce ganhou **{amount} creditos**.",
         color=color,
-        timestamp=_utcnow()
+        fields=[
+            ("Saldo atual", f"**{economia[user_id]:,}** créditos"),
+        ],
+        thumbnail_url=interaction.user.display_avatar.url,
+        author_id=interaction.user.id,
     )
-    embed = _style_embed(interaction.guild, embed)
-    view = EconomyView(interaction.user.id)
-    saldo_btn = discord.ui.Button(label="Ver saldo", style=discord.ButtonStyle.secondary, emoji=econ_cfg.get("currency_emoji", "💳"))
-    async def _saldo(inter: discord.Interaction):
-        s = economia.get(inter.user.id, 0)
-        saldo_color = econ_cfg.get("saldo_color", 0xFFD700)
-        e = discord.Embed(title=f"{econ_cfg.get('currency_emoji','💎')} Seu saldo", description=f"Você tem: **{s} créditos**", color=saldo_color)
-        e = _style_embed(inter.guild, e)
-        await inter.response.send_message(embed=e, ephemeral=True)
-    saldo_btn.callback = _saldo
-    view.add_item(saldo_btn)
-    await interaction.response.send_message(embed=embed, view=view)
+    await interaction.response.send_message(view=view)
 
 
 @tree.command(name="saldo", description="Vê seu saldo de créditos")
@@ -913,14 +916,14 @@ async def saldo(interaction: discord.Interaction):
     color = econ_cfg.get("saldo_color", 0xFFD700)
     user_id = interaction.user.id
     saldo_valor = economia.get(user_id, 0)
-    embed = discord.Embed(
-        title="💎 Seu saldo",
-        description=f"Você tem: **{saldo_valor} créditos**",
+    view = make_card(
+        title="Seu saldo",
+        description=f"Você tem: **{saldo_valor:,} créditos**",
         color=color,
-        timestamp=_utcnow()
+        thumbnail_url=interaction.user.display_avatar.url,
+        author_id=interaction.user.id,
     )
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, view=EconomyView(interaction.user.id), ephemeral=True)
+    await interaction.response.send_message(view=view, ephemeral=True)
 
 
 @tree.command(name="transferir", description="Transfere créditos para outro membro")
@@ -931,21 +934,15 @@ async def transferir(interaction: discord.Interaction, member: discord.Member, a
     econ_cfg = panel_config.get_guild_config(interaction.guild.id, "economy")
     emoji = econ_cfg.get("currency_emoji", "💸")
     msg_template = econ_cfg.get("transfer_success_message", "{emoji} {sender} transferiu {amount} créditos para {receiver}")
-    insufficient_msg = econ_cfg.get("insufficient_funds_message", "❌ Saldo insuficiente!")
+    insufficient_msg = econ_cfg.get("insufficient_funds_message", "Saldo insuficiente.")
 
     if amount <= 0:
-        await interaction.response.send_message(
-            embed=discord.Embed(description="❌ Quantia inválida. Use um valor maior que 0.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.response.send_message(view=make_error("Quantia inválida. Use um valor maior que 0."), ephemeral=True)
         return
     if receiver_id == sender_id:
-        await interaction.response.send_message(
-            embed=discord.Embed(description="❌ Você não pode transferir para si mesmo.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.response.send_message(view=make_error("Você não pode transferir para si mesmo."), ephemeral=True)
         return
-    
+
     async with economia_lock:
         if sender_id not in economia:
             economia[sender_id] = 0
@@ -953,10 +950,7 @@ async def transferir(interaction: discord.Interaction, member: discord.Member, a
             economia[receiver_id] = 0
 
         if economia[sender_id] < amount:
-            await interaction.response.send_message(
-                embed=discord.Embed(description=insufficient_msg, color=discord.Color.red()),
-                ephemeral=True
-            )
+            await interaction.response.send_message(view=make_error(insufficient_msg), ephemeral=True)
             return
 
         economia[sender_id] -= amount
@@ -964,29 +958,33 @@ async def transferir(interaction: discord.Interaction, member: discord.Member, a
         await save_economia(economia)
 
     color = econ_cfg.get("saldo_color", 0xFFD700)
-    embed = discord.Embed(
-        title=f"{emoji} Transferência realizada",
+    view = make_card(
+        title="Transferencia realizada",
         description=msg_template.format(emoji=emoji, sender=interaction.user.mention, amount=amount, receiver=member.mention),
         color=color,
-        timestamp=_utcnow()
+        author_id=interaction.user.id,
     )
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed)
+    await interaction.response.send_message(view=view)
 
 @tree.command(name="top", description="Exibe ranking de maiores saldos")
 async def top(interaction: discord.Interaction):
     if not economia:
-        await interaction.response.send_message("Nenhum dado de economia.", ephemeral=True)
+        await interaction.response.send_message(view=make_error("Nenhum dado de economia."), ephemeral=True)
         return
     sorted_users = sorted(economia.items(), key=lambda x: x[1], reverse=True)[:10]
+    medals = {1: "🥇", 2: "🥈", 3: "🥉"}
     lines = []
-    for i,(uid, value) in enumerate(sorted_users, start=1):
+    for i, (uid, value) in enumerate(sorted_users, start=1):
         member = interaction.guild.get_member(uid)
         name = member.display_name if member else f"ID:{uid}"
-        lines.append(f"{i}. **{name}** — {value}")
-    embed = discord.Embed(title="🏆 Top Saldos", description="\n".join(lines), color=discord.Color.gold(), timestamp=_utcnow())
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+        medal = medals.get(i, f"**{i}.**")
+        lines.append(f"{medal} {name} — **{value:,}** créditos")
+    view = make_card(
+        title="Ranking de saldos",
+        description="\n".join(lines),
+        color=0xFFD700,
+    )
+    await interaction.response.send_message(view=view, ephemeral=True)
 
 @tree.command(name="shop", description="Lista itens disponíveis para compra")
 async def shop(interaction: discord.Interaction):
@@ -999,9 +997,13 @@ async def shop(interaction: discord.Interaction):
         await interaction.response.send_message("Nenhum item na loja.", ephemeral=True)
         return
     lines = [f"{it['name']} — {it['price']} {econ_cfg.get('shop_currency_name','créditos')}" for it in items]
-    embed = discord.Embed(title="🛍️ Loja", description="\n".join(lines), color=econ_cfg.get('daily_color',0x00FF00), timestamp=_utcnow())
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    view = make_card(
+        title="Loja",
+        description="\n".join(lines),
+        color=econ_cfg.get('daily_color', 0x00FF00),
+        author_id=interaction.user.id,
+    )
+    await interaction.response.send_message(view=view, ephemeral=True)
 
 @tree.command(name="buy", description="Compra um item da loja")
 @app_commands.describe(item="Nome do item exatamente como listado")
@@ -1021,7 +1023,7 @@ async def buy(interaction: discord.Interaction, item: str):
         return
     user_id = interaction.user.id
     insufficient_msg = econ_cfg.get("insufficient_funds_message", "Saldo insuficiente.")
-    buy_msg = econ_cfg.get("buy_success_message", "✅ Você comprou **{item}** por {price} {currency}.")
+    buy_msg = econ_cfg.get("buy_success_message", "Voce comprou **{item}** por {price} {currency}.")
     currency = econ_cfg.get('shop_currency_name','créditos')
     emoji = econ_cfg.get('currency_emoji', '💳')
     async with economia_lock:
@@ -1036,9 +1038,8 @@ async def buy(interaction: discord.Interaction, item: str):
         inv_user.append(target['name'])
         inventory[str(user_id)] = inv_user
         await save_inventory(inventory)
-    embed = discord.Embed(description=buy_msg.format(item=target['name'], price=target['price'], currency=currency, emoji=emoji), color=discord.Color.green(), timestamp=_utcnow())
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    view = make_success(buy_msg.format(item=target['name'], price=target['price'], currency=currency, emoji=emoji), author_id=interaction.user.id)
+    await interaction.response.send_message(view=view, ephemeral=True)
 
 @tree.command(name="inventory", description="Mostra seus itens comprados")
 async def inventory_cmd(interaction: discord.Interaction):
@@ -1046,9 +1047,242 @@ async def inventory_cmd(interaction: discord.Interaction):
     if not inv_user:
         await interaction.response.send_message("Inventário vazio.", ephemeral=True)
         return
-    embed = discord.Embed(title="🎒 Inventário", description="\n".join([f"• {it}" for it in inv_user]), color=discord.Color.blurple(), timestamp=_utcnow())
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    view = make_card(
+        title="Inventario",
+        description="\n".join([f"• {it}" for it in inv_user]),
+        color=discord.Color.blurple(),
+        author_id=interaction.user.id,
+    )
+    await interaction.response.send_message(view=view, ephemeral=True)
+
+
+# ========== ECONOMIA AVANÇADA ==========
+
+TRABALHOS = [
+    ("👨‍🍳 Cozinheiro", 50, 150),
+    ("🚗 Motorista de Uber", 40, 120),
+    ("💻 Programador freelancer", 80, 200),
+    ("🎨 Designer gráfico", 60, 180),
+    ("📦 Entregador", 30, 100),
+    ("🎵 DJ de festa", 70, 160),
+    ("📸 Fotógrafo", 50, 140),
+    ("🏗️ Pedreiro", 60, 130),
+    ("🎭 Ator de teatro", 40, 170),
+    ("✂️ Barbeiro", 35, 110),
+    ("🐕 Passeador de cães", 25, 90),
+    ("📚 Professor particular", 55, 150),
+    ("🎮 Streamer", 20, 250),
+    ("🧹 Faxineiro", 30, 80),
+    ("🍕 Pizzaiolo", 45, 120),
+]
+
+FRACASSOS_ROUBO = [
+    "Voce tropecou e caiu enquanto fugia.",
+    "A vitima te viu e chamou a policia.",
+    "Seu plano falhou miseravelmente.",
+    "Voce confundiu a carteira com um tijolo.",
+    "A vitima era um lutador de MMA.",
+]
+
+
+@tree.command(name="trabalhar", description="Trabalha para ganhar créditos")
+@app_commands.checks.cooldown(1, 3600, key=lambda i: (i.guild_id, i.user.id))
+async def trabalhar(interaction: discord.Interaction):
+    econ_cfg = panel_config.get_guild_config(interaction.guild.id, "economy")
+    trabalho_nome, ganho_min, ganho_max = random.choice(TRABALHOS)
+    ganho = random.randint(ganho_min, ganho_max)
+
+    # Multiplicador por cargo
+    salary_roles = econ_cfg.get("salary_roles", {})
+    multiplier = 1.0
+    for role_id_str, mult in salary_roles.items():
+        role = interaction.guild.get_role(int(role_id_str))
+        if role and role in interaction.user.roles:
+            multiplier = max(multiplier, mult)
+    ganho = int(ganho * multiplier)
+
+    async with economia_lock:
+        user_id = interaction.user.id
+        if user_id not in economia:
+            economia[user_id] = 0
+        economia[user_id] += ganho
+        await save_economia(economia)
+
+    fields = [("Saldo atual", f"{economia.get(interaction.user.id, 0)} créditos")]
+    if multiplier > 1:
+        fields.insert(0, ("Bonus de cargo", f"Multiplicador: {multiplier}x"))
+    view = make_card(
+        title=f"{trabalho_nome}",
+        description=f"Voce trabalhou como {trabalho_nome.split(' ', 1)[1]} e ganhou **{ganho} creditos**.",
+        color=0x00FF00,
+        fields=fields,
+        author_id=interaction.user.id,
+    )
+    await interaction.response.send_message(view=view)
+
+
+@tree.command(name="roubar", description="Tenta roubar créditos de outro membro")
+@app_commands.checks.cooldown(1, 7200, key=lambda i: (i.guild_id, i.user.id))
+@app_commands.describe(member="Membro alvo do roubo")
+async def roubar(interaction: discord.Interaction, member: discord.Member):
+    if member.id == interaction.user.id:
+        await interaction.response.send_message("Voce nao pode roubar a si mesmo.", ephemeral=True)
+        return
+    if member.bot:
+        await interaction.response.send_message("Voce nao pode roubar um bot.", ephemeral=True)
+        return
+
+    econ_cfg = panel_config.get_guild_config(interaction.guild.id, "economy")
+    roubo_chance = econ_cfg.get("rob_success_chance", 40)
+    roubo_max_percent = econ_cfg.get("rob_max_percent", 30)
+    roubo_penalty_percent = econ_cfg.get("rob_penalty_percent", 20)
+
+    async with economia_lock:
+        sender_id = interaction.user.id
+        target_id = member.id
+        if sender_id not in economia:
+            economia[sender_id] = 0
+        if target_id not in economia:
+            economia[target_id] = 0
+
+        target_saldo = economia[target_id]
+        if target_saldo < 50:
+            await interaction.response.send_message("Esse membro nao tem creditos suficientes para roubar.", ephemeral=True)
+            return
+
+        if economia[sender_id] < 50:
+            await interaction.response.send_message("Voce precisa de pelo menos 50 creditos para tentar roubar.", ephemeral=True)
+            return
+
+        sucesso = random.randint(1, 100) <= roubo_chance
+
+        if sucesso:
+            max_roubo = int(target_saldo * roubo_max_percent / 100)
+            roubado = random.randint(1, max(1, max_roubo))
+            economia[sender_id] += roubado
+            economia[target_id] -= roubado
+            await save_economia(economia)
+
+            result_view = make_card(
+                title="Roubo bem-sucedido",
+                description=f"Voce roubou **{roubado} creditos** de {member.mention}.",
+                color=0x00FF00,
+                author_id=interaction.user.id,
+            )
+        else:
+            multa = int(economia[sender_id] * roubo_penalty_percent / 100)
+            multa = max(multa, 10)
+            economia[sender_id] -= multa
+            await save_economia(economia)
+
+            motivo = random.choice(FRACASSOS_ROUBO)
+            result_view = make_card(
+                title="Roubo falhou",
+                description=f"{motivo}\nVoce perdeu **{multa} creditos** de multa.",
+                color=0xFF0000,
+                author_id=interaction.user.id,
+            )
+
+    await interaction.response.send_message(view=result_view)
+
+
+apostar_group = app_commands.Group(name="apostar", description="Comandos de apostas")
+tree.add_command(apostar_group)
+
+
+@apostar_group.command(name="coinflip", description="Aposta cara ou coroa")
+@app_commands.describe(valor="Valor da aposta")
+async def coinflip(interaction: discord.Interaction, valor: int):
+    if valor <= 0:
+        await interaction.response.send_message("Valor deve ser maior que 0.", ephemeral=True)
+        return
+
+    async with economia_lock:
+        user_id = interaction.user.id
+        if user_id not in economia:
+            economia[user_id] = 0
+        if economia[user_id] < valor:
+            await interaction.response.send_message("Saldo insuficiente.", ephemeral=True)
+            return
+
+        resultado = random.choice(["cara", "coroa"])
+        ganhou = random.choice([True, False])
+
+        if ganhou:
+            economia[user_id] += valor
+            result_view = make_card(
+                title=f"{resultado.capitalize()}",
+                description=f"Voce ganhou **{valor} creditos**.\nSaldo: {economia[user_id]}",
+                color=0x00FF00,
+                author_id=interaction.user.id,
+            )
+        else:
+            economia[user_id] -= valor
+            result_view = make_card(
+                title=f"{resultado.capitalize()}",
+                description=f"Voce perdeu **{valor} creditos**.\nSaldo: {economia[user_id]}",
+                color=0xFF0000,
+                author_id=interaction.user.id,
+            )
+        await save_economia(economia)
+
+    await interaction.response.send_message(view=result_view)
+
+
+@apostar_group.command(name="roleta", description="Aposta na roleta (vermelho, preto ou verde)")
+@app_commands.describe(valor="Valor da aposta", cor="Cor: vermelho, preto ou verde")
+@app_commands.choices(cor=[
+    app_commands.Choice(name="🔴 Vermelho (2x)", value="vermelho"),
+    app_commands.Choice(name="⚫ Preto (2x)", value="preto"),
+    app_commands.Choice(name="🟢 Verde (14x)", value="verde"),
+])
+async def roleta(interaction: discord.Interaction, valor: int, cor: app_commands.Choice[str]):
+    if valor <= 0:
+        await interaction.response.send_message("Valor deve ser maior que 0.", ephemeral=True)
+        return
+
+    async with economia_lock:
+        user_id = interaction.user.id
+        if user_id not in economia:
+            economia[user_id] = 0
+        if economia[user_id] < valor:
+            await interaction.response.send_message("Saldo insuficiente.", ephemeral=True)
+            return
+
+        # Resultado: 48.6% vermelho, 48.6% preto, 2.7% verde
+        roll = random.randint(0, 36)
+        if roll == 0:
+            resultado = "verde"
+            emoji_resultado = "🟢"
+        elif roll % 2 == 0:
+            resultado = "vermelho"
+            emoji_resultado = "🔴"
+        else:
+            resultado = "preto"
+            emoji_resultado = "⚫"
+
+        cor_escolhida = cor.value
+        if cor_escolhida == resultado:
+            multi = 14 if resultado == "verde" else 2
+            ganho = valor * multi
+            economia[user_id] += ganho - valor  # já apostou o valor
+            result_view = make_card(
+                title=f"{emoji_resultado} {resultado.capitalize()}",
+                description=f"Voce apostou {cor_escolhida} e ganhou **{ganho} creditos** ({multi}x).\nSaldo: {economia[user_id]}",
+                color=0x00FF00,
+                author_id=interaction.user.id,
+            )
+        else:
+            economia[user_id] -= valor
+            result_view = make_card(
+                title=f"{emoji_resultado} {resultado.capitalize()}",
+                description=f"Voce apostou {cor_escolhida} mas saiu {resultado}. Perdeu **{valor} creditos**.\nSaldo: {economia[user_id]}",
+                color=0xFF0000,
+                author_id=interaction.user.id,
+            )
+        await save_economia(economia)
+
+    await interaction.response.send_message(view=result_view)
 
 
 # ========== MODERAÇÃO ==========
@@ -1058,21 +1292,21 @@ async def inventory_cmd(interaction: discord.Interaction):
 @app_commands.describe(member="Membro a ser removido", reason="Motivo da remoção")
 async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "Sem razão fornecida"):
     if not interaction.guild:
-        await interaction.response.send_message("❌ Esse comando só pode ser usado em servidores.", ephemeral=True)
+        await interaction.response.send_message("Esse comando so pode ser usado em servidores.", ephemeral=True)
         return
 
     # O autor não pode expulsar alguém com cargo igual/maior (salvo dono)
     if interaction.user != interaction.guild.owner and member.top_role >= interaction.user.top_role:
-        await interaction.response.send_message("❌ Você não pode expulsar alguém com cargo igual/maior que o seu.", ephemeral=True)
+        await interaction.response.send_message("Voce nao pode expulsar alguem com cargo igual/maior que o seu.", ephemeral=True)
         return
 
     # O bot precisa ter cargo maior que o alvo
     if member.top_role >= interaction.guild.me.top_role:
-        await interaction.response.send_message("❌ Não posso expulsar esse membro (cargo maior/igual ao meu).", ephemeral=True)
+        await interaction.response.send_message("Nao posso expulsar esse membro (cargo maior/igual ao meu).", ephemeral=True)
         return
 
     if not interaction.guild.me.guild_permissions.kick_members:
-        await interaction.response.send_message("❌ Não tenho permissão de expulsar membros neste servidor.", ephemeral=True)
+        await interaction.response.send_message("Nao tenho permissao de expulsar membros neste servidor.", ephemeral=True)
         return
 
     # Confirmação via botões
@@ -1106,7 +1340,7 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
             self.view.stop()
             await inter.response.send_message('Processando expulsão...', ephemeral=True)
     view = KickReasonView()
-    prompt_embed = discord.Embed(title=f'{emoji} Expulsar Membro', description=f'Selecione um motivo rápido ou use o fornecido: {reason}\nMembro: {member.mention}', color=discord.Color.orange())
+    prompt_embed = discord.Embed(title='Expulsar membro', description=f'Selecione um motivo rapido ou use o fornecido: {reason}\nMembro: {member.mention}', color=discord.Color.orange())
     prompt_embed = _style_embed(interaction.guild, prompt_embed)
     await interaction.response.send_message(embed=prompt_embed, view=view, ephemeral=True)
     await view.wait()
@@ -1119,18 +1353,12 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
     
     # Validar hierarquia de cargos
     if member.top_role >= interaction.guild.me.top_role:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Não posso expulsar esse membro - ele tem cargo igual ou superior ao meu.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Não posso expulsar esse membro - ele tem cargo igual ou superior ao meu."), ephemeral=True)
         return
     if member.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Você não pode expulsar esse membro - ele tem cargo igual ou superior ao seu.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Você não pode expulsar esse membro - ele tem cargo igual ou superior ao seu."), ephemeral=True)
         return
-    
+
     try:
         await member.kick(reason=reason)
         if dm_enabled and not member.bot:
@@ -1139,26 +1367,19 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
             except Exception:
                 pass
     except discord.Forbidden:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Não tenho permissão para remover esse membro.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Não tenho permissão para remover esse membro."), ephemeral=True)
     except discord.HTTPException:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Falha ao tentar remover o membro. Tente novamente.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Falha ao tentar remover o membro. Tente novamente."), ephemeral=True)
     else:
         rendered = template.format(user=member.mention, reason=reason)
-        embed = discord.Embed(
-            title=f"{emoji} Membro removido",
+        kick_view = make_card(
+            title="Membro removido",
             description=rendered,
             color=color,
-            timestamp=_utcnow()
+            author_id=interaction.user.id,
         )
-        embed = _style_embed(interaction.guild, embed)
-        await interaction.followup.send(embed=embed, ephemeral=True)
-        
+        await interaction.followup.send(view=kick_view, ephemeral=True)
+
         # Enviar log para o canal de logs (se configurado)
         guild_id = str(interaction.guild.id)
         if guild_id in config and 'log_channel_id' in config[guild_id]:
@@ -1166,7 +1387,7 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
             log_channel = bot.get_channel(log_channel_id)
             if log_channel:
                 log_embed = discord.Embed(
-                    title=f"{emoji} Membro Removido (Kick)",
+                    title="Membro removido (Kick)",
                     color=discord.Color.orange()
                 )
                 log_embed = _style_embed(interaction.guild, log_embed)
@@ -1183,19 +1404,19 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
 @app_commands.describe(member="Membro a ser banido", reason="Motivo do banimento")
 async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = "Sem razão fornecida"):
     if not interaction.guild:
-        await interaction.response.send_message("❌ Esse comando só pode ser usado em servidores.", ephemeral=True)
+        await interaction.response.send_message("Esse comando so pode ser usado em servidores.", ephemeral=True)
         return
 
     if interaction.user != interaction.guild.owner and member.top_role >= interaction.user.top_role:
-        await interaction.response.send_message("❌ Você não pode banir alguém com cargo igual/maior que o seu.", ephemeral=True)
+        await interaction.response.send_message("Voce nao pode banir alguem com cargo igual/maior que o seu.", ephemeral=True)
         return
 
     if member.top_role >= interaction.guild.me.top_role:
-        await interaction.response.send_message("❌ Não posso banir esse membro (cargo maior/igual ao meu).", ephemeral=True)
+        await interaction.response.send_message("Nao posso banir esse membro (cargo maior/igual ao meu).", ephemeral=True)
         return
 
     if not interaction.guild.me.guild_permissions.ban_members:
-        await interaction.response.send_message("❌ Não tenho permissão de banir membros neste servidor.", ephemeral=True)
+        await interaction.response.send_message("Nao tenho permissao de banir membros neste servidor.", ephemeral=True)
         return
 
     # Confirmação via botões
@@ -1228,7 +1449,7 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
             self.view.stop()
             await inter.response.send_message('Processando banimento...', ephemeral=True)
     view = BanReasonView()
-    prompt_embed = discord.Embed(title=f'{emoji} Banir Membro', description=f'Selecione um motivo rápido ou use o fornecido: {reason}\nMembro: {member.mention}', color=discord.Color.orange())
+    prompt_embed = discord.Embed(title='Banir membro', description=f'Selecione um motivo rapido ou use o fornecido: {reason}\nMembro: {member.mention}', color=discord.Color.orange())
     prompt_embed = _style_embed(interaction.guild, prompt_embed)
     await interaction.response.send_message(embed=prompt_embed, view=view, ephemeral=True)
     await view.wait()
@@ -1241,18 +1462,12 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
     
     # Validar hierarquia de cargos
     if member.top_role >= interaction.guild.me.top_role:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Não posso banir esse membro - ele tem cargo igual ou superior ao meu.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Não posso banir esse membro - ele tem cargo igual ou superior ao meu."), ephemeral=True)
         return
     if member.top_role >= interaction.user.top_role and interaction.user.id != interaction.guild.owner_id:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Você não pode banir esse membro - ele tem cargo igual ou superior ao seu.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Você não pode banir esse membro - ele tem cargo igual ou superior ao seu."), ephemeral=True)
         return
-    
+
     try:
         await member.ban(reason=reason)
         if dm_enabled and not member.bot:
@@ -1261,26 +1476,19 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
             except Exception:
                 pass
     except discord.Forbidden:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Não tenho permissão para banir esse membro.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Não tenho permissão para banir esse membro."), ephemeral=True)
     except discord.HTTPException:
-        await interaction.followup.send(
-            embed=discord.Embed(description="❌ Falha ao tentar banir o membro. Tente novamente.", color=discord.Color.red()),
-            ephemeral=True
-        )
+        await interaction.followup.send(view=make_error("Falha ao tentar banir o membro. Tente novamente."), ephemeral=True)
     else:
         rendered = template.format(user=member.mention, reason=reason)
-        embed = discord.Embed(
-            title=f"{emoji} Membro banido",
+        ban_view = make_card(
+            title="Membro banido",
             description=rendered,
             color=color,
-            timestamp=_utcnow()
+            author_id=interaction.user.id,
         )
-        embed = _style_embed(interaction.guild, embed)
-        await interaction.followup.send(embed=embed, ephemeral=True)
-        
+        await interaction.followup.send(view=ban_view, ephemeral=True)
+
         # Enviar log para o canal de logs (se configurado)
         guild_id = str(interaction.guild.id)
         if guild_id in config and 'log_channel_id' in config[guild_id]:
@@ -1288,7 +1496,7 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
             log_channel = bot.get_channel(log_channel_id)
             if log_channel:
                 log_embed = discord.Embed(
-                    title=f"{emoji} Membro Banido",
+                    title="Membro banido",
                     color=discord.Color.red()
                 )
                 log_embed = _style_embed(interaction.guild, log_embed)
@@ -1325,7 +1533,7 @@ async def warn(interaction: discord.Interaction, member: discord.Member, reason:
                 await inter.response.send_message(f"Motivo selecionado: {reason}", ephemeral=True)
                 self.view.stop()
         view = WarnReasonView()
-        prompt = discord.Embed(title='⚠️ Selecionar motivo', description='Escolha um motivo rápido para o aviso.', color=0xFFA500)
+        prompt = discord.Embed(title='Selecionar motivo', description='Escolha um motivo rapido para o aviso.', color=0xFFA500)
         prompt = _style_embed(interaction.guild, prompt)
         await interaction.response.send_message(embed=prompt, view=view, ephemeral=True)
         await view.wait()
@@ -1337,19 +1545,18 @@ async def warn(interaction: discord.Interaction, member: discord.Member, reason:
     color = mod_cfg.get("warn_color", 0xFFA500)
     template = mod_cfg.get("warn_message", f"{emoji} {{user}} recebeu um aviso.\n**Motivo:** {{reason}}")
     rendered = template.format(user=member.mention, reason=reason)
-    embed = discord.Embed(
-        title=f"{emoji} Aviso",
+    warn_view = make_card(
+        title="Aviso aplicado",
         description=rendered,
         color=color,
-        timestamp=_utcnow()
+        author_id=interaction.user.id,
     )
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await interaction.response.send_message(view=warn_view, ephemeral=True)
     if dm_enabled and not member.bot:
         try:
             await member.send(dm_msg.format(server=interaction.guild.name, reason=reason))
         except discord.Forbidden:
-            await interaction.followup.send(f"{emoji} Aviso aplicado, mas não foi possível enviar DM ao usuário.", ephemeral=True)
+            await interaction.followup.send("Aviso aplicado, mas nao foi possivel enviar DM ao usuario.", ephemeral=True)
     # Persistir warn e verificar threshold
     warns_cfg = panel_config.get_guild_config(interaction.guild.id, 'moderation')
     threshold = warns_cfg.get('warn_threshold', 3)
@@ -1362,9 +1569,12 @@ async def warn(interaction: discord.Interaction, member: discord.Member, reason:
         # Auto ação: ban
         try:
             await member.ban(reason=f"Acumulou {current} avisos")
-            auto_embed = discord.Embed(description=f"🚫 {member.mention} banido automaticamente após {current} avisos.", color=0xFF0000)
-            auto_embed = _style_embed(interaction.guild, auto_embed)
-            await interaction.followup.send(embed=auto_embed, ephemeral=True)
+            auto_view = make_card(
+                title="Auto-Ban",
+                description=f"{member.mention} banido automaticamente após {current} avisos.",
+                color=0xFF0000,
+            )
+            await interaction.followup.send(view=auto_view, ephemeral=True)
         except Exception:
             pass
 
@@ -1376,19 +1586,23 @@ async def timeout(interaction: discord.Interaction, member: discord.Member, minu
     default_minutes = mod_cfg.get('timeout_default_minutes', 10)
     real_minutes = minutos if minutos and minutos > 0 else default_minutes
     if real_minutes <= 0:
-        await interaction.response.send_message("❌ Duração inválida.", ephemeral=True)
+        await interaction.response.send_message("Duracao invalida.", ephemeral=True)
         return
-    until = _utcnow() + discord.timedelta(minutes=real_minutes)
+    until = _utcnow() + datetime.timedelta(minutes=real_minutes)
     try:
         await member.edit(timed_out_until=until, reason=motivo)
         msg_template = mod_cfg.get('timeout_message', '⏳ {user} recebeu timeout por {minutes} min. Motivo: {reason}')
         rendered = msg_template.format(user=member.mention, minutes=real_minutes, reason=motivo)
         t_color = mod_cfg.get('warn_color', 0xFFA500)
-        t_embed = discord.Embed(description=rendered, color=t_color)
-        t_embed = _style_embed(interaction.guild, t_embed)
-        await interaction.response.send_message(embed=t_embed, ephemeral=True)
+        t_view = make_card(
+            title="Timeout aplicado",
+            description=rendered,
+            color=t_color,
+            author_id=interaction.user.id,
+        )
+        await interaction.response.send_message(view=t_view, ephemeral=True)
     except Exception:
-        await interaction.response.send_message("❌ Falha ao aplicar timeout.", ephemeral=True)
+        await interaction.response.send_message("Falha ao aplicar timeout.", ephemeral=True)
 
 @tree.command(name="metricas", description="Mostra métricas básicas do bot no servidor")
 async def metricas(interaction: discord.Interaction):
@@ -1401,14 +1615,19 @@ async def metricas(interaction: discord.Interaction):
     if feedback_store:
         avg_feedback = sum(feedback_store.values())/len(feedback_store)
     total_credits = sum(economia.values()) if economia else 0
-    embed = discord.Embed(title='📊 Métricas Básicas', color=discord.Color.purple(), timestamp=_utcnow())
-    embed.add_field(name='Tickets', value=f"Criados: {tickets_cfg.get('ticket_counter',0)}\nFechados: {tickets_cfg.get('closed_counter',0)}", inline=True)
-    embed.add_field(name='Warns', value=f"Total warns registrados: {sum(warn_store.values())}", inline=True)
-    embed.add_field(name='Economia', value=f"Usuários: {len(economia)}\nCréditos totais: {total_credits}", inline=True)
-    embed.add_field(name='Feedback Médio', value=f"{avg_feedback:.2f}" if feedback_store else 'Sem dados', inline=True)
-    embed.set_footer(text="💡 Use /stats para estatísticas detalhadas")
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    metricas_view = make_card(
+        title="Metricas do servidor",
+        description="Use /stats para estatisticas detalhadas",
+        color=discord.Color.purple(),
+        fields=[
+            ("Tickets", f"Criados: {tickets_cfg.get('ticket_counter',0)}\nFechados: {tickets_cfg.get('closed_counter',0)}"),
+            ("Warns", f"Total warns registrados: {sum(warn_store.values())}"),
+            ("Economia", f"Usuários: {len(economia)}\nCréditos totais: {total_credits}"),
+            ("Feedback Médio", f"{avg_feedback:.2f}" if feedback_store else "Sem dados"),
+        ],
+        author_id=interaction.user.id,
+    )
+    await interaction.response.send_message(view=metricas_view, ephemeral=True)
 
 
 # ========== CONFIGURAÇÃO ==========
@@ -1423,97 +1642,9 @@ async def setlog(interaction: discord.Interaction, canal: discord.TextChannel):
     config[guild_id]['log_channel_id'] = canal.id
     await save_config(config)
     
-    embed = discord.Embed(
-        title="✅ Canal de Log Configurado",
-        description=f"Logs de moderação serão enviados para {canal.mention}",
-        color=discord.Color.green(),
-        timestamp=_utcnow()
-    )
-    embed = _style_embed(interaction.guild, embed)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    view = make_success(f"Logs de moderação serão enviados para {canal.mention}", author_id=interaction.user.id)
+    await interaction.response.send_message(view=view, ephemeral=True)
 
-
-# ==================== EXECUTAR ====================
-
-bot.run(TOKEN)
-
-# ==================== TASK LOOPS ====================
-
-@tasks.loop(minutes=5)
-async def auto_close_tickets_task():
-    """Fecha tickets inativos automaticamente."""
-    for guild in bot.guilds:
-        cfg = panel_config.get_guild_config(guild.id, 'tickets')
-        if not cfg.get('enabled') or not cfg.get('auto_close_minutes'):
-            continue
-        threshold_minutes = cfg.get('auto_close_minutes')
-        category_ids = cfg.get('category_ids', [])
-        if not category_ids and cfg.get('category_id'):
-            category_ids = [cfg.get('category_id')]
-        for cid in category_ids:
-            cat = guild.get_channel(cid)
-            if not isinstance(cat, discord.CategoryChannel):
-                continue
-            for ch in cat.channels:
-                if not isinstance(ch, discord.TextChannel):
-                    continue
-                if not ch.topic or 'user:' not in ch.topic:
-                    continue
-                try:
-                    last_msg = None
-                    async for msg in ch.history(limit=1):
-                        last_msg = msg
-                        break
-                    if last_msg:
-                        delta = (_utcnow() - last_msg.created_at).total_seconds() / 60
-                        if delta >= threshold_minutes:
-                            await ch.send('⏰ Ticket fechado automaticamente por inatividade.')
-                            await asyncio.sleep(5)
-                            await ch.delete(reason='Auto-close por inatividade')
-                            closed = cfg.get('closed_counter', 0) + 1
-                            panel_config.update_guild_config(guild.id, 'tickets', {'closed_counter': closed})
-                except Exception:
-                    pass
-
-@tasks.loop(minutes=10)
-async def sla_check_task():
-    """Verifica tickets em atraso e envia alertas."""
-    for guild in bot.guilds:
-        cfg = panel_config.get_guild_config(guild.id, 'tickets')
-        if not cfg.get('enabled') or not cfg.get('sla_minutes'):
-            continue
-        sla_min = cfg.get('sla_minutes')
-        alert_roles = cfg.get('sla_alert_role_ids', [])
-        escalation_min = cfg.get('escalation_minutes')
-        escalation_roles = cfg.get('escalation_role_ids', [])
-        category_ids = cfg.get('category_ids', [])
-        if not category_ids and cfg.get('category_id'):
-            category_ids = [cfg.get('category_id')]
-        for cid in category_ids:
-            cat = guild.get_channel(cid)
-            if not isinstance(cat, discord.CategoryChannel):
-                continue
-            for ch in cat.channels:
-                if not isinstance(ch, discord.TextChannel):
-                    continue
-                if not ch.topic or 'user:' not in ch.topic:
-                    continue
-                try:
-                    async for msg in ch.history(limit=50):
-                        if not msg.author.bot:
-                            staff_responded = any(r.id in cfg.get('support_role_ids', []) for r in msg.author.roles) if hasattr(msg.author, 'roles') else False
-                            if staff_responded:
-                                break
-                    else:
-                        created_delta = (_utcnow() - ch.created_at).total_seconds() / 60
-                        if created_delta >= sla_min and alert_roles:
-                            mention = ' '.join([f'<@&{rid}>' for rid in alert_roles])
-                            await ch.send(f'🚨 SLA excedido! {mention}')
-                        if escalation_min and created_delta >= escalation_min and escalation_roles:
-                            mention_esc = ' '.join([f'<@&{rid}>' for rid in escalation_roles])
-                            await ch.send(f'⚠️ Escalonamento! {mention_esc}')
-                except Exception:
-                    pass
 
 # ==================== AUTO-MOD EVENTO ====================
 
@@ -1559,7 +1690,7 @@ async def on_message(message: discord.Message):
                 if action == 'delete':
                     await message.delete()
                 elif action == 'warn':
-                    await message.reply(f"⚠️ Sua mensagem violou regras ({', '.join(set(violations))}).", delete_after=10)
+                    await message.reply(f"Sua mensagem violou regras ({', '.join(set(violations))}).", delete_after=10)
             except Exception:
                 pass
             # Log opcional
@@ -1567,11 +1698,71 @@ async def on_message(message: discord.Message):
             if log_channel_id:
                 log_ch = message.guild.get_channel(log_channel_id)
                 if log_ch:
-                    log_embed = discord.Embed(title='🤖 Auto-Mod', description=f"Autor: {message.author.mention}\nViolações: {', '.join(set(violations))}", color=discord.Color.red(), timestamp=_utcnow())
+                    log_embed = discord.Embed(title='Auto-Mod', description=f"Autor: {message.author.mention}\nViolações: {', '.join(set(violations))}", color=discord.Color.red(), timestamp=_utcnow())
                     log_embed = _style_embed(message.guild, log_embed)
                     try: await log_ch.send(embed=log_embed)
                     except Exception: pass
     except Exception:
         pass
     await bot.process_commands(message)
+
+
+# ==================== EXECUTAR ====================
+
+def _setup_interativo():
+    """Setup interativo quando o .env não existe ou token está vazio."""
+    print("\n" + "="*60)
+    print("  CONFIGURACAO INICIAL DO BOT")
+    print("="*60)
+    print("\nO arquivo .env nao foi encontrado ou o token esta vazio.")
+    print("\nPara obter o token do bot:")
+    print("  1. Acesse: https://discord.com/developers/applications")
+    print("  2. Clique no seu bot > Bot > Reset Token")
+    print("  3. Copie o token gerado")
+    print("\n  NUNCA compartilhe seu token com ninguem!\n")
+
+    token = input("Cole o token do bot aqui: ").strip()
+    if not token:
+        print("\n  [ERRO] Token nao pode estar vazio. Tente novamente.")
+        sys.exit(1)
+
+    with open(".env", "w", encoding="utf-8") as f:
+        f.write(f"DISCORD_TOKEN={token}\n")
+
+    print("\n  [OK] Token salvo com sucesso no arquivo .env!")
+    print("   Iniciando o bot...\n")
+    return token
+
+# Verificar token antes de rodar
+if not TOKEN or TOKEN == "SEU_TOKEN_AQUI":
+    TOKEN = _setup_interativo()
+    # Recarregar
+    load_dotenv(override=True)
+    TOKEN = os.getenv('DISCORD_TOKEN')
+
+if not TOKEN or TOKEN == "SEU_TOKEN_AQUI":
+    print("\n  [ERRO] Token do bot nao configurado!")
+    print("   Execute 'instalar.bat' ou edite o arquivo .env")
+    print("   Coloque seu token na variável DISCORD_TOKEN\n")
+    sys.exit(1)
+
+try:
+    bot.run(TOKEN)
+except discord.LoginFailure:
+    print("\n" + "="*60)
+    print("  [ERRO] Token invalido!")
+    print("="*60)
+    print("\nO token que você colocou no .env está incorreto ou expirou.")
+    print("\nPara corrigir:")
+    print("  1. Acesse: https://discord.com/developers/applications")
+    print("  2. Clique no seu bot > Bot > Reset Token")
+    print("  3. Copie o novo token")
+    print("  4. Edite o arquivo .env e cole o token")
+    print("  5. Ou delete o .env e execute 'instalar.bat' novamente")
+    print("="*60 + "\n")
+    sys.exit(1)
+except Exception as e:
+    print(f"\n  [ERRO] Erro ao iniciar o bot: {e}")
+    print("   Verifique sua conexão com a internet e tente novamente.\n")
+    sys.exit(1)
 

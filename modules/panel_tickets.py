@@ -3,6 +3,7 @@ Painel de Tickets - Configuração Avançada
 Desenvolvido por: MARKIZIN
 """
 import discord
+import datetime
 from discord.ui import Button
 from .panel_system import BasePanel, ChannelSelect, EditTextModal
 from typing import Any, Dict
@@ -859,7 +860,7 @@ class CloseTicketButton(discord.ui.Button):
             pass
         try:
             await channel.send('Este ticket será arquivado em 10s.')
-            await discord.utils.sleep_until(discord.utils.utcnow() + discord.timedelta(seconds=10))
+            await discord.utils.sleep_until(discord.utils.utcnow() + datetime.timedelta(seconds=10))
         except Exception:
             pass
         try:

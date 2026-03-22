@@ -107,9 +107,9 @@ class BackupCommands(commands.Cog):
             try:
                 self.backup_system.create_backup(guild.id)
                 self.backup_system.cleanup_old_backups(guild.id, keep_last=10)
-                print(f"✅ Backup automático criado para {guild.name}")
+                print(f"  [OK] Backup automatico criado para {guild.name}")
             except Exception as e:
-                print(f"❌ Erro no backup automático de {guild.name}: {e}")
+                print(f"  [ERRO] Erro no backup automatico de {guild.name}: {e}")
     
     @auto_backup.before_loop
     async def before_auto_backup(self):
