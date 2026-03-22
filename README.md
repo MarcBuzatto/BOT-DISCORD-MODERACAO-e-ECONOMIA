@@ -1,11 +1,11 @@
-# Bot Discord — Moderacao e Economia
+# Bot Discord — Moderação e Economia
 
-Bot completo de Discord com moderacao, economia, niveis, sorteios e utilitarios.
+Bot completo de Discord com moderação, economia, níveis, sorteios e utilitários.
 Desenvolvido por **MARKIZIN**.
 
 ---
 
-## Instalacao
+## Instalação
 
 ### Requisitos
 
@@ -14,14 +14,14 @@ Desenvolvido por **MARKIZIN**.
 
 ### Passo 1 — Instalar
 
-De **duplo-clique** no arquivo `instalar.bat`.
+Dê **duplo-clique** no arquivo `instalar.bat`.
 Ele instala tudo automaticamente e pede o token do bot.
 
 ### Passo 2 — Iniciar
 
-De **duplo-clique** no arquivo `iniciar.bat`.
+Dê **duplo-clique** no arquivo `iniciar.bat`.
 
-> Para instrucoes detalhadas, veja `COMO_INSTALAR.txt`.
+> Para instruções detalhadas, veja `COMO_INSTALAR.txt`.
 > Para hospedagem na nuvem, veja `COMO_HOSPEDAR.txt`.
 
 ---
@@ -30,23 +30,23 @@ De **duplo-clique** no arquivo `iniciar.bat`.
 
 ### Economia
 
-| Comando | Descricao |
+| Comando | Descrição |
 |---------|-----------|
-| `/daily` | Coletar creditos diarios |
+| `/daily` | Coletar créditos diários |
 | `/saldo` | Ver saldo |
-| `/transferir` | Transferir creditos |
+| `/transferir` | Transferir créditos |
 | `/top` | Ranking de saldos |
-| `/trabalhar` | Trabalhar para ganhar creditos |
-| `/roubar` | Tentar roubar creditos de outro membro |
+| `/trabalhar` | Trabalhar para ganhar créditos |
+| `/roubar` | Tentar roubar créditos de outro membro |
 | `/apostar coinflip` | Apostar cara ou coroa |
 | `/apostar roleta` | Apostar na roleta |
 | `/shop` | Ver loja de itens |
 | `/buy` | Comprar item |
-| `/inventory` | Ver inventario |
+| `/inventory` | Ver inventário |
 
-### Moderacao
+### Moderação
 
-| Comando | Descricao |
+| Comando | Descrição |
 |---------|-----------|
 | `/kick` | Expulsar membro |
 | `/ban` | Banir membro |
@@ -54,111 +54,111 @@ De **duplo-clique** no arquivo `iniciar.bat`.
 | `/timeout` | Aplicar timeout |
 | `/setlog` | Definir canal de logs |
 
-### Niveis e XP
+### Níveis e XP
 
-| Comando | Descricao |
+| Comando | Descrição |
 |---------|-----------|
-| `/rank` | Ver nivel e XP |
+| `/rank` | Ver nível e XP |
 | `/leaderboard` | Top 10 de XP |
-| `/setlevel` | Definir nivel (admin) |
+| `/setlevel` | Definir nível (admin) |
 
 ### Sorteios
 
-| Comando | Descricao |
+| Comando | Descrição |
 |---------|-----------|
 | `/sorteio criar` | Criar sorteio |
 | `/sorteio reroll` | Re-sortear vencedores |
 | `/sorteio listar` | Listar sorteios ativos |
 | `/sorteio encerrar` | Encerrar manualmente |
 
-### Utilitarios
+### Utilitários
 
-| Comando | Descricao |
+| Comando | Descrição |
 |---------|-----------|
-| `/sugestao` | Enviar sugestao para votacao |
-| `/enquete` | Criar enquete com opcoes |
+| `/sugestao` | Enviar sugestão para votação |
+| `/enquete` | Criar enquete com opções |
 | `/lembrete` | Criar lembrete |
-| `/cargo-temp` | Dar cargo temporario |
-| `/serverinfo` | Info do servidor |
-| `/userinfo` | Info de membro |
+| `/cargo-temp` | Dar cargo temporário |
+| `/serverinfo` | Informações do servidor |
+| `/userinfo` | Informações de membro |
 
-### Configuracao
+### Configuração
 
-| Comando | Descricao |
+| Comando | Descrição |
 |---------|-----------|
-| `/painel` | Painel de configuracao completo |
+| `/painel` | Painel de configuração completo |
 | `/backup` | Criar backup |
 | `/restore` | Restaurar backup |
 | `/tema` | Mudar tema visual |
-| `/permissoes` | Permissoes por cargo |
-| `/stats` | Estatisticas detalhadas |
-| `/antiraid` | Protecao anti-raid |
-| `/formulario` | Formularios customizados |
+| `/permissoes` | Permissões por cargo |
+| `/stats` | Estatísticas detalhadas |
+| `/antiraid` | Proteção anti-raid |
+| `/formulario` | Formulários customizáveis |
 
 **Total: 39 comandos slash**
 
 ---
 
-## Modulos
+## Módulos
 
-| Modulo | Descricao |
+| Módulo | Descrição |
 |--------|-----------|
-| Boas-vindas | Mensagens de entrada e saida |
+| Boas-vindas | Mensagens de entrada e saída |
 | Tickets | Suporte com categorias e SLA |
-| Economia | Creditos, loja, apostas, trabalho |
-| Moderacao | Ban, kick, warn, auto-mod |
+| Economia | Créditos, loja, apostas, trabalho |
+| Moderação | Ban, kick, warn, auto-mod |
 | Logs | Registro por categoria |
-| Autorole | Cargos por reacao |
+| Autorole | Cargos por reação |
 | Embeds | Estilo visual global |
-| Niveis/XP | Sistema de XP e cargos por nivel |
+| Níveis/XP | Sistema de XP e cargos por nível |
 | Sorteios | Giveaways com timer e requisitos |
-| Utilitarios | Sugestoes, starboard, enquetes |
-| Backup | Backup automatico e manual |
+| Utilitários | Sugestões, starboard, enquetes |
+| Backup | Backup automático e manual |
 | Temas | 5 temas visuais |
-| Permissoes | Controle de acesso por cargo |
-| Import/Export | Compartilhar configs entre servidores |
-| Estatisticas | Tracking de uso |
-| Anti-Raid | Protecao contra raids |
-| Formularios | Formularios customizaveis |
+| Permissões | Controle de acesso por cargo |
+| Import/Export | Compartilhar configurações entre servidores |
+| Estatísticas | Tracking de uso |
+| Anti-Raid | Proteção contra raids |
+| Formulários | Formulários customizáveis |
 
 ---
 
 ## Estrutura
 
 ```
-instalar.bat            Instalador automatico
+instalar.bat            Instalador automático
 iniciar.bat             Iniciar o bot
 bot.py                  Arquivo principal
-requirements.txt        Dependencias
-.env.example            Modelo de configuracao
-COMO_INSTALAR.txt       Guia de instalacao
+requirements.txt        Dependências
+.env.example            Modelo de configuração
+COMO_INSTALAR.txt       Guia de instalação
 COMO_HOSPEDAR.txt       Guia de hospedagem
-squarecloud.app         Config para SquareCloud
-Procfile                Config para Railway/Render
-runtime.txt             Versao do Python
+squarecloud.app         Configuração para SquareCloud
+Procfile                Configuração para Railway/Render
+runtime.txt             Versão do Python
 modules/
-  panel_system.py       Core do sistema de paineis
+  panel_system.py       Core do sistema de painéis
   panel_command.py      Comando /painel
   panel_tickets.py      Sistema de tickets
   panel_welcome.py      Boas-vindas
-  panel_modules.py      Economia e Moderacao
-  panel_autorole.py     Cargos por reacao
+  panel_modules.py      Economia e Moderação
+  panel_autorole.py     Cargos por reação
   panel_embeds.py       Estilo de embeds
   panel_emojis.py       Emojis customizados
   panel_logs.py         Sistema de logs
-  panel_leveling.py     Config de niveis
-  panel_utilities.py    Config de utilitarios
+  panel_leveling.py     Configuração de níveis
+  panel_utilities.py    Configuração de utilitários
   components_v2.py      Infraestrutura Components V2
   leveling_system.py    Sistema de XP
   giveaway_system.py    Sistema de sorteios
-  utilities_system.py   Utilitarios
+  utilities_system.py   Utilitários
   backup_system.py      Backup/restore
   themes.py             Temas visuais
-  permissions.py        Permissoes por cargo
+  permissions.py        Permissões por cargo
   import_export.py      Import/export
-  stats_system.py       Estatisticas
+  stats_system.py       Estatísticas
   antiraid_system.py    Anti-raid
-  form_system.py        Formularios
+  form_system.py        Formulários
 ```
 
 ---
@@ -168,16 +168,16 @@ modules/
 O bot pode rodar no seu computador ou na nuvem.
 
 - **Local**: Use `instalar.bat` e `iniciar.bat`
-- **SquareCloud**: Zipar tudo e fazer upload (config inclusa)
-- **Railway/Render**: Conectar repositorio (Procfile incluso)
-- **VPS Linux**: Instrucoes no `COMO_HOSPEDAR.txt`
+- **SquareCloud**: Zipar tudo e fazer upload (configuração incluída)
+- **Railway/Render**: Conectar repositório (Procfile incluído)
+- **VPS Linux**: Instruções no `COMO_HOSPEDAR.txt`
 
 ---
 
-## Protecao de Autoria
+## Proteção de Autoria
 
-Este bot possui sistema de protecao multicamadas v2.0.
-Modificacoes nao autorizadas causam encerramento automatico.
+Este bot possui sistema de proteção multicamadas v2.0.
+Modificações não autorizadas causam encerramento automático.
 
 ---
 
