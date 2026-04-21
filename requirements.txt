@@ -3,4 +3,4 @@
 # https://ggmax.com.br/perfil/markizin002
 
 discord.py==2.7.1
-python-dotenv==1.0.0
+python-dotenv==1.2.2
